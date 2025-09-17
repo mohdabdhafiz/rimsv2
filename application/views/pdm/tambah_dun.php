@@ -1,0 +1,83 @@
+<div class="container-fluid mb-3">
+    <div class="p-3 border rounded mb-3">
+        <h1>DAERAH MENGUNDI BAGI DUN</h1>
+        <?php echo anchor(base_url(), 'Laman Utama', "class='btn btn-secondary w-100 mt-3'"); ?>
+    </div>
+    <div class="p-3 border rounded mb-3">
+        <h2>TAMBAH DAERAH MENGUNDI</h2>
+        <?php echo validation_errors(); ?>
+        <?php echo form_open('dun/proses_tambah_dm'); ?>
+        <div class="mb-3">
+            <label for="input_dun_bil" class="form-label">1) Pilih DUN:</label>
+            <select name="input_dun_bil" id="input_dun_bil" class="form-control" autofocus>
+                <option value="0">Sila Pilih</option>
+                <?php foreach($senarai_dun as $dun): ?>
+                    <option value="<?= $dun->dun_bil ?>"><?= $dun->dun_nama; ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="input_nama_dm" class="form-label">2) Nama Daerah Mengundi:</label>
+            <input type="text" name="input_nama_dm" id="input_nama_dm" class="form-control">
+            <span class="small text-muted">Contoh: 082/12/01 CHERATING</span>
+        </div>
+        <div class="mb-3">
+            <label for="input_nama_dm" class="form-label">3) Bilangan Pengundi:</label>
+            <input type="text" name="input_bilangan_pengundi" id="input_bilangan_pengundi" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-outline-success w-100">Simpan</button>
+</form>
+    </div>
+
+    <div class="p-3 border rounded mb-3">
+        <h2>SENARAI DAERAH MENGUNDI</h2>
+        <div class="row g-3">
+            <?php foreach($senarai_dun as $dun): ?>
+            <div class="col-12 col-lg-6">
+                <h4><?= $dun->dun_nama; ?></h4>
+                <?php $senarai_pdm = $data_pdm->dun($dun->dun_bil); 
+                    if(count($senarai_pdm) > 0){
+                ?>
+                 <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                        <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>DAERAH MENGUNDI (DM)</th>
+                                    <th>BILANGAN PENGUNDI (ORANG)</th>
+                                    <th>KEMASKINI MAKLUMAT</th>
+                                    <th>PADAM MAKLUMAT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    <?php
+                    $count = 1; 
+                    foreach($senarai_pdm as $pdm): ?>
+                    <tr>
+                    <?php echo form_open('dun/proses_kemaskini_pdm'); ?>
+                        <td><?= $count++ ?></td>
+                        <td><textarea name="input_nama_dm" id="input_nama_dm" cols="10" rows="3" wrap="soft" class="form-control"><?= $pdm->pdt_nama ?></textarea></td>
+                        <td><input type="text" name="input_bilangan_pengundi" id="input_bilangan_pengundi" class="form-control" value="<?= $pdm->pdt_bilangan_pengundi ?>"></td>
+                        <td>
+                            <input type="hidden" name="input_dm_bil" value="<?= $pdm->pdt_bil ?>">
+                            <button type="submit" class="btn btn-outline-success w-100">Simpan</button></td>
+                    </form>
+                    <?php echo form_open('dun/proses_padam_pdm'); ?>
+                        <td>
+                            <input type="hidden" name="input_dm_bil" value="<?= $pdm->pdt_bil ?>">
+                            <button type="submit" class="btn btn-outline-danger w-100">Padam</button>
+                        </td>
+                    </form>
+                    </tr>
+                    <?php endforeach; ?>
+                
+                    </tbody>
+                        </table>
+                    </div>
+                <?php } ?>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+</div>
