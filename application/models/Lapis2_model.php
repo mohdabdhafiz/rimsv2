@@ -78,6 +78,7 @@ class Lapis2_model extends CI_Model
      * Defines the entire schema for LAPIS 2.0 reports.
      */
     private function binaTable(){
+
         if ($this->db->table_exists($this->tableName)) {
             // KEMAS KINI: Tambah lajur status jika belum wujud
             if (!$this->db->field_exists('lapis_status', $this->tableName)) {
@@ -97,46 +98,57 @@ class Lapis2_model extends CI_Model
                     'lapis_ulasan_tolak' => ['type' => 'TEXT', 'null' => TRUE]
                 ]);
             }
-            return;
+             // PENAMBAHAN BARU: KOLUM SPESIFIK UNTUK KLUSTER EKONOMI
+            if (!$this->db->field_exists('lapis_ekonomi_harga_naik', $this->tableName)) {
+                $this->dbforge->add_column($this->tableName, [
+                    // Akan menyimpan data dari checkboxes sebagai teks dipisahkan koma
+                    'lapis_ekonomi_harga_naik' => ['type' => 'TEXT', 'null' => TRUE] 
+                ]);
+            }
+            if (!$this->db->field_exists('lapis_ekonomi_bekalan_kurang', $this->tableName)) {
+                $this->dbforge->add_column($this->tableName, [
+                    // Akan menyimpan data dari checkboxes sebagai teks dipisahkan koma
+                    'lapis_ekonomi_bekalan_kurang' => ['type' => 'TEXT', 'null' => TRUE]
+                ]);
+            }
+
+        }else{
+            
+            $fields = [
+                'lapis_bil' => ['type' => 'BIGINT', 'constraint' => 20, 'null' => FALSE, 'auto_increment' => TRUE],
+                'lapis_kluster_bil' => ['type' => 'BIGINT', 'constraint' => 20, 'null' => FALSE],
+                'lapis_kluster_nama' => ['type' => 'TEXT', 'null' => TRUE],
+                'lapis_tarikh_laporan_bil' => ['type' => 'BIGINT', 'constraint' => 20, 'null' => TRUE],
+                'lapis_tarikh_laporan_dibina' => ['type' => 'DATETIME', 'null' => TRUE],
+                'lapis_tarikh_laporan' => ['type' => 'DATE', 'null' => TRUE],
+                'lapis_pelapor_bil' => ['type' => 'BIGINT', 'constraint' => 20, 'null' => TRUE],
+                'lapis_pelapor_nama' => ['type' => 'TEXT', 'null' => TRUE],
+                'lapis_negeri_bil' => ['type' => 'BIGINT', 'constraint' => 20, 'null' => TRUE],
+                'lapis_negeri_nama' => ['type' => 'TEXT', 'null' => TRUE],
+                'lapis_daerah_bil' => ['type' => 'BIGINT', 'constraint' => 20, 'null' => TRUE],
+                'lapis_daerah_nama' => ['type' => 'TEXT', 'null' => TRUE],
+                'lapis_parlimen_bil' => ['type' => 'BIGINT', 'constraint' => 20, 'null' => TRUE],
+                'lapis_parlimen_nama' => ['type' => 'TEXT', 'null' => TRUE],
+                'lapis_dun_bil' => ['type' => 'BIGINT', 'constraint' => 20, 'null' => TRUE],
+                'lapis_dun_nama' => ['type' => 'TEXT', 'null' => TRUE],
+                'lapis_dm_bil' => ['type' => 'BIGINT', 'constraint' => 20, 'null' => TRUE],
+                'lapis_dm_nama' => ['type' => 'TEXT', 'null' => TRUE],
+                'lapis_jenis_kawasan' => ['type' => 'TEXT', 'null' => TRUE],
+                'lapis_tajuk_isu' => ['type' => 'TEXT', 'null' => TRUE],
+                'lapis_ringkasan_isu' => ['type' => 'TEXT', 'null' => TRUE],
+                'lapis_lokasi' => ['type' => 'TEXT', 'null' => TRUE],
+                'lapis_latitude' => ['type' => 'TEXT', 'null' => TRUE],
+                'lapis_longitude' => ['type' => 'TEXT', 'null' => TRUE],
+                'lapis_cadangan_intervensi' => ['type' => 'TEXT', 'null' => TRUE],
+                'lapis_waktu_dibina' => ['type' => 'DATETIME', 'null' => TRUE], // Renamed for clarity
+                'lapis_status' => ['type' => 'VARCHAR', 'constraint' => '50', 'null' => TRUE, 'default' => 'Laporan Diterima'],
+                'lapis_ulasan_tolak' => ['type' => 'TEXT', 'null' => TRUE]
+            ];
+
+            $this->dbforge->add_field($fields);
+            $this->dbforge->add_key('lapis_bil', TRUE); // Set primary key
+            $this->dbforge->create_table($this->tableName);
         }
-
-        if ($this->db->table_exists($this->tableName)) {
-            return; // Do nothing if table already exists
-        }
-
-        $fields = [
-            'lapis_bil' => ['type' => 'BIGINT', 'constraint' => 20, 'null' => FALSE, 'auto_increment' => TRUE],
-            'lapis_kluster_bil' => ['type' => 'BIGINT', 'constraint' => 20, 'null' => FALSE],
-            'lapis_kluster_nama' => ['type' => 'TEXT', 'null' => TRUE],
-            'lapis_tarikh_laporan_bil' => ['type' => 'BIGINT', 'constraint' => 20, 'null' => TRUE],
-            'lapis_tarikh_laporan_dibina' => ['type' => 'DATETIME', 'null' => TRUE],
-            'lapis_tarikh_laporan' => ['type' => 'DATE', 'null' => TRUE],
-            'lapis_pelapor_bil' => ['type' => 'BIGINT', 'constraint' => 20, 'null' => TRUE],
-            'lapis_pelapor_nama' => ['type' => 'TEXT', 'null' => TRUE],
-            'lapis_negeri_bil' => ['type' => 'BIGINT', 'constraint' => 20, 'null' => TRUE],
-            'lapis_negeri_nama' => ['type' => 'TEXT', 'null' => TRUE],
-            'lapis_daerah_bil' => ['type' => 'BIGINT', 'constraint' => 20, 'null' => TRUE],
-            'lapis_daerah_nama' => ['type' => 'TEXT', 'null' => TRUE],
-            'lapis_parlimen_bil' => ['type' => 'BIGINT', 'constraint' => 20, 'null' => TRUE],
-            'lapis_parlimen_nama' => ['type' => 'TEXT', 'null' => TRUE],
-            'lapis_dun_bil' => ['type' => 'BIGINT', 'constraint' => 20, 'null' => TRUE],
-            'lapis_dun_nama' => ['type' => 'TEXT', 'null' => TRUE],
-            'lapis_dm_bil' => ['type' => 'BIGINT', 'constraint' => 20, 'null' => TRUE],
-            'lapis_dm_nama' => ['type' => 'TEXT', 'null' => TRUE],
-            'lapis_jenis_kawasan' => ['type' => 'TEXT', 'null' => TRUE],
-            'lapis_tajuk_isu' => ['type' => 'TEXT', 'null' => TRUE],
-            'lapis_ringkasan_isu' => ['type' => 'TEXT', 'null' => TRUE],
-            'lapis_lokasi' => ['type' => 'TEXT', 'null' => TRUE],
-            'lapis_latitude' => ['type' => 'TEXT', 'null' => TRUE],
-            'lapis_longitude' => ['type' => 'TEXT', 'null' => TRUE],
-            'lapis_cadangan_intervensi' => ['type' => 'TEXT', 'null' => TRUE],
-            'lapis_waktu_dibina' => ['type' => 'DATETIME', 'null' => TRUE], // Renamed for clarity
-            'lapis_status' => ['type' => 'VARCHAR', 'constraint' => '50', 'null' => TRUE, 'default' => 'Laporan Diterima']
-        ];
-
-        $this->dbforge->add_field($fields);
-        $this->dbforge->add_key('lapis_bil', TRUE); // Set primary key
-        $this->dbforge->create_table($this->tableName);
     }
 
     //======================================================================

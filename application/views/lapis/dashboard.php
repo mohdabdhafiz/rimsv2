@@ -28,6 +28,13 @@
         font-size: 2.5rem;
         font-weight: 700;
     }
+    .kluster-card-link {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .kluster-card-link:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
 </style>
 
 <div class="pagetitle">
@@ -184,15 +191,25 @@
                         <p>Klik pada salah satu kluster di bawah untuk melihat senarai laporan yang berkaitan.</p>
                         <div class="row g-4">
                             <?php foreach($senarai_kluster as $kluster): ?>
-                                <div class="col-md-6">
-                                    <div class="card h-100 shadow-sm">
-                                        <div class="card-body d-flex flex-column">
-                                            <h5 class="card-title pb-1"><?= htmlspecialchars($kluster->kit_nama) ?></h5>
-                                            <p>Urus atau lihat laporan untuk kluster isu ini.</p>
-                                            <div class="mt-auto text-end">
-                                                <a href="<?= site_url('lapis/'.$kluster->kit_shortform) ?>" class="btn btn-outline-secondary btn-sm">Lihat Laporan</a>
-                                                <a href="<?= site_url('pentadbir_kluster/dashboard/'.$kluster->kit_bil) ?>" class="btn btn-primary btn-sm">Papan Pemuka Pentadbir</a>
+                                <div class="col-md-4 col-lg-3 d-flex align-items-stretch">
+                                    <div class="card w-100 kluster-card-link">
+                                        <div class="card-body d-flex flex-column text-center">
+                                            
+                                            <!-- BAHAGIAN UTAMA KAD (BOLEH DIKLIK) -->
+                                            <!-- pautan ini akan mengambil semua ruang yang ada (flex-grow-1) -->
+                                            <a href="<?= site_url('lapis/terima/' . $kluster->kit_bil) ?>" class="text-decoration-none text-dark flex-grow-1 d-flex flex-column justify-content-center">
+                                                <i class="bi bi-folder2-open display-4 text-primary"></i>
+                                                <h5 class="card-title mt-2 mb-0"><?= htmlspecialchars(strtoupper($kluster->kit_nama), ENT_QUOTES, 'UTF-8') ?></h5>
+                                            </a>
+
+                                            <!-- BUTANG PENTADBIR (DI BAHAGIAN BAWAH) -->
+                                            <!-- mt-auto akan menolak butang ini ke bahagian paling bawah kad -->
+                                            <div class="mt-auto pt-3">
+                                                <a href="<?= site_url('pentadbir_kluster/dashboard/'.$kluster->kit_bil) ?>" class="btn btn-outline-primary btn-sm">
+                                                    Papan Pemuka Pentadbir
+                                                </a>
                                             </div>
+
                                         </div>
                                     </div>
                                 </div>
