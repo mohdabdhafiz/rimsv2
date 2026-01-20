@@ -3,6 +3,65 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Parlimen extends CI_Controller {
 
+private function template($sesi){
+        $sesi = strtoupper($sesi);
+        switch($sesi){
+            case 'URUSETIA' :
+                $view = "urussetia_na";
+                break;
+            case "DATA" :
+                $view = "us_sismap_na";
+                break;
+            case 'PPD' :
+                $view = "ppd_na";
+                break;
+            case 'NEGERI' :
+                $view = "negeri_na";
+                break;
+            default :
+                redirect(base_url());
+        }
+        $template = [
+            "header" => "$view/susunletak/atas",
+            "sidebar" => "$view/susunletak/sidebar",
+            "navbar" => "$view/susunletak/navbar",
+            "footer" => "$view/susunletak/bawah"
+        ];
+        return $template;
+    }
+
+    private function pengguna(){
+        $penggunaBil = $this->session->userdata("pengguna_bil");
+        $this->load->model("pengguna_model");
+        $pengguna = $this->pengguna_model->pengguna($penggunaBil);
+        return $pengguna;
+    }
+
+    private function sesi(){
+        $sesi = strtoupper($this->session->userdata("peranan"));
+        if(empty($sesi)){
+            redirect(base_url());
+        }
+        if(strpos($sesi, 'PPD') !== false){
+            $sesi = 'PPD';
+        }
+        if(strpos($sesi, 'NEGERI') !== false){
+            $sesi = 'NEGERI';
+        }
+        return $sesi;
+    }
+
+   /* public function indexX(){
+        $sesi = $this->sesi();
+        $data['pengguna'] = $this->pengguna();
+        $data = array_merge($data, $this->template($sesi));
+        $this->load->model("kempen_model");
+        $data['senaraiKempen'] = $this->kempen_model->senaraiTarikh(date("Y-m-d"));
+        $data['senaraiGambarKempen'] = $this->kempen_model->senaraiGambarTarikh(date("Y-m-d"));
+        $data['gunaView'] = ["kempen/utama"];
+        $this->load->view("baseTemplate", $data);
+    } */
+
     public function bil($parlimenBil){
         $this->load->model('parlimen_model');
         $data['parlimen'] = $this->parlimen_model->parlimen2($parlimenBil);

@@ -2,6 +2,47 @@
 class Daerah_model extends CI_Model {
 
     protected $table = "daerah";
+    protected $tugasDaerahTable = "tugas_daerah";
+
+    public function update20260120(){
+        $this->binaTable();
+    }
+
+    private function binaTable(){
+        $this->load->dbforge();
+        if($this->db->table_exists($this->tugasDaerahTable) == FALSE){
+            $fields = array(
+                'bil' => array(
+                    'type'           => 'BIGINT',
+                    'constraint'     => 20,
+                    'unsigned'       => TRUE, // Best practice for Primary Keys
+                    'auto_increment' => TRUE
+                ),
+                'peranan_bil' => array(
+                    'type'       => 'BIGINT',
+                    'constraint' => 20,
+                    'null'       => TRUE,
+                ),
+                'daerah_bil' => array(
+                    'type'       => 'BIGINT',
+                    'constraint' => 20,
+                    'null'       => TRUE,
+                ),
+                'pengguna_bil' => array(
+                    'type'       => 'BIGINT',
+                    'constraint' => 20,
+                    'null'       => TRUE,
+                ),
+                'waktu' => array(
+                    'type' => 'DATETIME',
+                    'null' => TRUE,
+                ),
+            );
+            $this->dbforge->add_field($fields);
+            $this->dbforge->add_key('bil', TRUE);
+            $this->dbforge->create_table($this->tugasDaerahTable, TRUE);
+        }
+    }
 
     //======================================================================
     // FUNGSI BARU DITAMBAH DI SINI
@@ -30,10 +71,6 @@ class Daerah_model extends CI_Model {
         $this->db->order_by('nama', 'ASC');
         $query = $this->db->get('daerah');
         return $query->result();
-    }
-
-    public function update20250716(){
-        //NOTHING
     }
 
     public function senaraiDaerahCarian(){

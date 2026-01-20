@@ -4,6 +4,10 @@ class Pegawai_model extends CI_Model
 
     protected $pegawai = "pegawai_tb";
 
+    public function update20260120(){
+        $this->binaTable();
+    }
+
     //======================================================================
     // FUNGSI BARU DITAMBAH DI SINI
     //======================================================================

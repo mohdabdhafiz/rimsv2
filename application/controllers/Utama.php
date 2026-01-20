@@ -273,7 +273,9 @@ class Utama extends CI_Controller {
 										$this->load->model('daerah_model');
 										$this->load->model('pdm_model');	
 										$this->load->model('winnable_candidate_parlimen_model');
-										$this->load->model('pencalonan_parlimen_model');	
+										$this->load->model('pencalonan_parlimen_model');
+										$this->daerah_model->update20260120();	
+										$this->pegawai_model->update20260120();
 										$data['dataDaerah'] = $this->daerah_model;
 										$data['data_pencalonan_dun'] = $this->pencalonan_model;
 										$data['data_pencalonan_parlimen'] = $this->pencalonan_parlimen_model;
@@ -290,6 +292,8 @@ class Utama extends CI_Controller {
 										$data['senaraiParlimenPilihanraya'] = $this->pilihanraya_model->senaraiParlimenPilihanraya($statusPilihanraya, $perananBil);
 										$data['senaraiAnggota'] = $this->pengguna_model->anggota($data['pengguna']->pengguna_peranan_bil);
 										$data['organisasi'] = $this->japen_model->organisasi($data['pengguna']->pengguna_peranan_bil);
+
+										$this->ppd_model->update20240206();
 										$data['ppd'] = $this->ppd_model->ppd($data['pengguna']->pengguna_peranan_bil);
 										if($data['pengguna']->pengguna_status == ''){
 											$this->load->view('susunletak/atas', $data);

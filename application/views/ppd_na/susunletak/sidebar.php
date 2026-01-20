@@ -18,56 +18,13 @@
       <i class="bi bi-chevron-down ms-auto"></i>
     </a>
     <ul id="sismap-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-      <li>
-        <a href="<?= site_url('harian') ?>">
-          <i class="bi bi-circle"></i><span>Etnografi</span>
-        </a>
-      </li>
-      <li>
-        <a href="<?= site_url('pilihanraya') ?>">
-          <i class="bi bi-circle"></i><span>Pilihan Raya</span>
-        </a>
-      </li>
-      <li>
-        <a href="<?= site_url('scoresheet') ?>">
-          <i class="bi bi-circle"></i><span>Score Sheet</span>
-        </a>
-      </li>
-      <li>
-        <a href="<?= site_url('dp') ?>">
-          <i class="bi bi-circle"></i><span>Maklumat Daftar Pengundi</span>
-        </a>
-      </li>
-      <li>
-        <a href="<?= site_url('') ?>">
-          <i class="bi bi-circle"></i><span>Negeri</span>
-        </a>
-      </li>
-      <li>
-        <a href="<?= site_url('') ?>">
-          <i class="bi bi-circle"></i><span>Daerah</span>
-        </a>
-      </li>
-      <li>
-        <a href="<?= site_url('') ?>">
-          <i class="bi bi-circle"></i><span>Parlimen</span>
-        </a>
-      </li>
-      <li>
-        <a href="<?= site_url('') ?>">
-          <i class="bi bi-circle"></i><span>DUN</span>
-        </a>
-      </li>
-      <li>
-        <a href="<?= site_url('') ?>">
-          <i class="bi bi-circle"></i><span>Daerah Mengundi</span>
-        </a>
-      </li>
-      <li>
-        <a href="<?= site_url('') ?>">
-          <i class="bi bi-circle"></i><span>Jangkaan Calon</span>
-        </a>
-      </li>
+      <li><a href="<?= site_url('dm') ?>"><i class="bi bi-circle"></i><span>Daerah Mengundi</span></a></li>
+      <li><a href="<?= site_url('dm') ?>"><i class="bi bi-circle"></i><span>Jangkaan Calon</span></a></li>
+      <li><a href="<?= site_url('dm') ?>"><i class="bi bi-circle"></i><span>Petugas PRU / PRN / PRK</span></a></li>
+      <li><a href="<?= site_url('dm') ?>"><i class="bi bi-circle"></i><span>Hari Penamaan Calon</span></a></li>
+      <li><a href="<?= site_url('dm') ?>"><i class="bi bi-circle"></i><span>Aktiviti Kempen Lapangan</span></a></li>
+      <li><a href="<?= site_url('dm') ?>"><i class="bi bi-circle"></i><span>Grading</span></a></li>
+      <li><a href="<?= site_url('dm') ?>"><i class="bi bi-circle"></i><span>Hari Mengundi</span></a></li>
     </ul>
   </li>
 
@@ -113,71 +70,10 @@
 
   
 
-  <li class="nav-item">
-    <a href="#" class="nav-link collapsed" data-bs-target="#obp-nav" data-bs-toggle="collapse">
-      <i class="bi bi-file-person"></i>
-      <span>RIMS@OBP</span>
-      <i class="bi bi-chevron-down ms-auto"></i>
-    </a>
-    <ul id="obp-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-      <li>
-        <a href="<?= site_url('obp') ?>">
-          <i class="bi bi-circle"></i>
-          <span>Laman</span>
-        </a>
-      </li>
-      <li>
-        <a href="<?= site_url('obp/senarai') ?>">
-          <i class="bi bi-circle"></i>
-          <span>Senarai</span>
-        </a>
-      </li>
-      <li>
-        <a href="<?= site_url('obp/tambah') ?>">
-          <i class="bi bi-circle"></i>
-          <span>Tambah Maklumat OBP</span>
-        </a>
-      </li>
-    </ul>
-  </li>
 
-  <li class="nav-item">
-    <a href="#" class="nav-link collapsed" data-bs-target="#bencana-nav" data-bs-toggle="collapse">
-      <i class="bi bi-globe2"></i>
-      <span>RIMS@BENCANA</span>
-      <i class="bi bi-chevron-down ms-auto"></i>
-    </a>
-    <ul id="bencana-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-      <li>
-        <a href="<?= site_url('bencana') ?>">
-          <i class="bi bi-circle"></i>
-          <span>Laman</span>
-        </a>
-      </li>
-      <li>
-        <a href="<?= site_url('bencana/senarai') ?>">
-          <i class="bi bi-circle"></i>
-          <span>Senarai</span>
-        </a>
-      </li>
-      <li>
-        <a href="<?= site_url('bencana/tambah') ?>">
-          <i class="bi bi-circle"></i>
-          <span>Borang Laporan</span>
-        </a>
-      </li>
-      <li>
-        <a href="<?= site_url('bencana/carianTerperinci') ?>">
-          <i class="bi bi-search"></i>
-          <span>Carian Terperinci</span>
-        </a>
-      </li>
-    </ul>
-  </li>
 
   <!-- End Components Nav -->
 
-  <?php if(empty($pengguna->pengguna_status)): ?>
 
   <li class="nav-heading">Pentadbir</li>
 
@@ -194,6 +90,7 @@
           <span>Laman</span>
         </a>
       </li>
+<?php if(!empty($ppd) && $pengguna->bil == $ppd->bil): ?>
       <li>
         <a href="<?= site_url('pengguna/status_tambah') ?>">
           <i class="bi bi-circle"></i>
@@ -218,10 +115,10 @@
           <span>Kemaskini PPD</span>
         </a>
       </li>
+<?php endif; ?>
     </ul>
   </li>
 
-<?php endif; ?>
 
 </ul>
 

@@ -21,7 +21,7 @@ $this->load->view($sidebar);
     <div class="col-12">
     <div class="card info-card sales-card">
         <div class="card-body">
-            <h5 class="card-title">Profil Pengguna <span>| Maklumat Terkini</span></h5>
+            <h5 class="card-title">RIMS@PERSONEL <span>| MAKLUMAT PENGGUNA</span></h5>
             <div class="d-flex align-items-center">
                 <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
                     <i class="bi bi-person"></i>
@@ -47,182 +47,103 @@ $this->load->view($sidebar);
     </div>
 </div>
 
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">RIMS@PROGRAM</h5>                
-                <table class="table table-sm table-bordered">
-                    <thead>
-                        <tr>
-                            <th class="text-center">BIL</th>
-                            <th width="50%">TUGASAN</th>
-                            <th class="text-center">BILANGAN LAPORAN</th>
-                            <th class="text-center">TINDAKAN</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="text-center">1</td>
-                            <td>Tambah program baharu</td>
-                            <td class="text-center">Tidak Berkenaan</td>
-                            <td class="text-center"><a href="<?= site_url('program/tambah') ?>" class="btn btn-outline-primary shadow-sm">
-                                <i class="bi bi-plus-circle"></i>
-                            </a></td>
-                        </tr>
-                        <tr>
-                            <td class="text-center">2</td>
-                            <td>Melihat senarai laporan program yang telah dimasukkan</td>
-                            <td class="text-center"><?= $bilanganLaporanSemua->bilanganLaporan ?></td>
-                            <td class="text-center"><a href="<?= site_url('program/senarai') ?>" class="btn btn-outline-primary shadow-sm">
-                                <i class="bi bi-inboxes"></i>
-                            </a></td>
-                        </tr>
-                        <?php if(!empty($ppd)): ?>
-                            <?php if($ppd->p_anggota == $pengguna->bil): ?>
-                                <tr>
-                                    <td class="text-center">3</td>
-                                    <td>Mengesahkan maklumat program yang <strong>DIRANCANG</strong> untuk dihantar ke Penolong Pengarah PKPM Negeri.</td>
-                                    <td class="text-center"><?= $bilanganLaporanPengesahanPPD->bilanganLaporan ?></td>
-                                    <?php $sendStatus = bin2hex($bilanganLaporanPengesahanPPD->statusLaporan); ?>
-                                    <td class="text-center"><a href="<?= site_url('program/senaraiIkutStatus/'.$sendStatus) ?>" class="btn btn-outline-primary shadow-sm">
-                                        <i class="bi bi-gear-wide-connected"></i>
-                                    </a></td>
-                                </tr>
-                                <tr>
-                                    <td class="text-center">4</td>
-                                    <td>Mengesahkan maklumat program yang <strong>TELAH DILAKSANAKAN</strong> untuk dihantar ke Penolong Pengarah PKPM Negeri.</td>
-                                    <td class="text-center"><?= $bilanganLaporanLaksana->bilanganLaporan ?></td>
-                                    <?php $sendStatus = bin2hex($bilanganLaporanLaksana->statusLaporan); ?>
-                                    <td class="text-center"><a href="<?= site_url('program/senaraiIkutStatus/'.$sendStatus) ?>" class="btn btn-outline-primary shadow-sm">
-                                        <i class="bi bi-gear-wide-connected"></i>
-                                    </a></td>
-                                </tr>
-                            <?php endif; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">RIMS@SISMAP <span>| SISTEM MAKLUMAT PILIHAN RAYA</span></h5>
 
-                <?php if(!empty($senaraiStatusLaporan)): ?>
-                <p><strong>Laporan Mengikut Status</strong></p>
-                    <div class="row g-3">
-                        <?php
-                        foreach($senaraiStatusLaporan as $status): 
-                            $sendStatus = bin2hex($status->program_status);
-                        ?>
-                            <div class="col-12 col-lg-2 col-md-4 col-sm-6">
-                                <div class="p-3 d-flex justify-content-center align-items-center">
-                                    <div class="d-flex flex-column text-center">
-                                        <em><?= $status->program_status ?></em>
-                                        <span class="display-1 my-3"><?= $status->kiraanStatus ?></span>
-                                        <a href="<?= site_url('program/senaraiIkutStatus/'.$sendStatus) ?>" class="btn btn-outline-primary shadow-sm">Lihat <i class="ms-3 bi bi-arrow-right-square"></i></a>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-        </div>
-    </div>
+        <div class="row g-3">
 
-    <div class="card">
-        <div class="card-body">
-            <h1 class="card-title">RIMS@KOMUNITI</h1>
-            <table class="table table-sm table-bordered">
-                <thead>
-                    <tr>
-                        <th class="text-center">BIL</th>
-                        <th width="50%">TUGASAN</th>
-                        <th class="text-center">BILANGAN LAPORAN</th>
-                        <th class="text-center">TINDAKAN</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="text-center">1</td>
-                        <td>Melihat senarai Komuniti yang telah didaftarkan</td>
-                        <td class="text-center"><?= $bilanganKomuniti->bilangan ?></td>
-                        <td class="text-center">
-                        <a href="<?= site_url('komuniti/senarai') ?>" class="btn btn-outline-primary shadow-sm">
-                                <i class="bi bi-inboxes"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-center">2</td>
-                        <td>Mendaftar Komuniti baharu</td>
-                        <td class="text-center">Tidak Berkenaan</td>
-                        <td class="text-center">
-                            <a href="<?= site_url('komuniti/daftar') ?>" class="btn btn-outline-primary shadow-sm">
-                                <i class="bi bi-node-plus"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-center">3</td>
-                        <td>Laporan Libat Urus Komuniti</td>
-                        <td class="text-center"><?= $bilanganLibatUrus->bilanganLaporan ?></td>
-                        <td class="text-center">
-                            <a href="<?= site_url('komuniti/libatUrus') ?>" class="btn btn-outline-primary shadow-sm">
-                                <i class="bi bi-card-list"></i>
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+            <div class="col-md-6 col-lg-4">
+                <a href="<?= site_url('dm') ?>" class="module-link-box card-hover-effect info-theme text-decoration-none p-3 d-flex align-items-center border rounded">
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="bi bi-geo-alt-fill"></i> 
+                    </div>
+                    <div class="ps-3">
+                        <h6 class="mb-0 fw-bold text-dark">Daerah Mengundi</h6>
+                        <span class="text-muted small">Mengemaskini Maklumat Bilangan Pengundi Terkini</span>
+                    </div>
+                </a>
+            </div>
 
-    <div class="card">
-        <div class="card-body">
-            <h1 class="card-title">RIMS@KELABMALAYSIAKU</h1>
-            <table class="table table-sm table-bordered">
-                <thead>
-                    <tr>
-                        <th class="text-center">BIL</th>
-                        <th width="50%">TUGASAN</th>
-                        <th class="text-center">BILANGAN LAPORAN</th>
-                        <th class="text-center">TINDAKAN</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="text-center">1</td>
-                        <td>Melihat senarai Kelab Malaysiaku yang telah didaftarkan</td>
-                        <td class="text-center"><?= $bilanganKelab ?></td>
-                        <td class="text-center">
-                        <a href="<?= site_url('kelabmalaysiaku/senarai') ?>" class="btn btn-outline-primary shadow-sm">
-                                <i class="bi bi-inboxes"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-center">2</td>
-                        <td>Menubuhkan Kelab Malaysiaku baharu</td>
-                        <td class="text-center">Tidak Berkenaan</td>
-                        <td class="text-center">
-                            <a href="<?= site_url('kelabmalaysiaku/daftar') ?>" class="btn btn-outline-primary shadow-sm">
-                                <i class="bi bi-node-plus"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-center">3</td>
-                        <td>Mendaftarkan Ahli Kelab Malaysiaku baharu</td>
-                        <td class="text-center"><?= $bilanganAhli ?></td>
-                        <td class="text-center">
-                        <a href="<?= site_url('kelabmalaysiaku/carian') ?>" class="btn btn-outline-primary shadow-sm">
-                                <i class="bi bi-person-plus"></i>
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+            <div class="col-md-6 col-lg-4">
+                <a href="<?= site_url('jangkaan') ?>" class="module-link-box card-hover-effect sales-theme text-decoration-none p-3 d-flex align-items-center border rounded">
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <div class="ps-3">
+                        <h6 class="mb-0 fw-bold text-dark">Jangkaan</h6>
+                        <span class="text-muted small">Analisa Calon</span>
+                    </div>
+                </a>
+            </div>
 
+            <div class="col-md-6 col-lg-4">
+                <a href="<?= site_url('petugas') ?>" class="module-link-box card-hover-effect customers-theme text-decoration-none p-3 d-flex align-items-center border rounded">
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
+                    <div class="ps-3">
+                        <h6 class="mb-0 fw-bold text-dark">Petugas</h6>
+                        <span class="text-muted small">SD & Lantikan</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <a href="<?= site_url('penamaan') ?>" class="module-link-box card-hover-effect revenue-theme text-decoration-none p-3 d-flex align-items-center border rounded">
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <div class="ps-3">
+                        <h6 class="mb-0 fw-bold text-dark">Penamaan</h6>
+                        <span class="text-muted small">Borang Rasmi</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <a href="<?= site_url('kempen') ?>" class="module-link-box card-hover-effect danger-theme text-decoration-none p-3 d-flex align-items-center border rounded">
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="bi bi-megaphone"></i>
+                    </div>
+                    <div class="ps-3">
+                        <h6 class="mb-0 fw-bold text-dark">Aktiviti</h6>
+                        <span class="text-muted small">Laporan Kempen</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <a href="<?= site_url('grading') ?>" class="module-link-box card-hover-effect purple-theme text-decoration-none p-3 d-flex align-items-center border rounded">
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="bi bi-bar-chart-line"></i>
+                    </div>
+                    <div class="ps-3">
+                        <h6 class="mb-0 fw-bold text-dark">Culaan</h6>
+                        <span class="text-muted small">Statistik Grading</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <a href="<?= site_url('undi') ?>" class="module-link-box card-hover-effect dark-theme text-decoration-none p-3 d-flex align-items-center border rounded">
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <div class="ps-3">
+                        <h6 class="mb-0 fw-bold text-dark">Keputusan</h6>
+                        <span class="text-muted small">Hari Undi</span>
+                    </div>
+                </a>
+            </div>
+
+        </div> </div>
+</div>
+    
     <div class="card">
         <div class="card-body">
             <h1 class="card-title">RIMS@LAPIS
-            <span class="text-muted"> : LAPORAN ISU SETEMPAT</span>
+            <span class="text-muted"> | LAPORAN ISU SETEMPAT</span>
             </h1>
             <table class="table table-sm table-bordered">
                 <thead>
@@ -262,7 +183,7 @@ $this->load->view($sidebar);
     <div class="card">
         <div class="card-body">
             <h1 class="card-title">RIMS@LPK
-            <span class="text-muted"> : LAPORAN PERSEPSI TERHADAP KERAJAAN</span>
+            <span class="text-muted"> | LAPORAN PERSEPSI TERHADAP KERAJAAN</span>
             </h1>
             <table class="table table-sm table-bordered">
                 <thead>
@@ -308,355 +229,6 @@ $this->load->view($sidebar);
             </table>
         </div>
     </div>
-
-    <div class="card">
-        <div class="card-body">
-            <h1 class="card-title">RIMS@OBP</h1>
-                <table class="table table-sm table-bordered">
-                <thead>
-                    <tr>
-                        <th class="text-center">BIL</th>
-                        <th width="50%">TUGASAN</th>
-                        <th class="text-center">BILANGAN LAPORAN</th>
-                        <th class="text-center">TINDAKAN</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="text-center">1</td>
-                        <td>Menambah maklumat OBP</td>
-                        <td class="text-center">Tidak Berkenaan</td>
-                        <td class="text-center">
-                            <a href="<?= site_url('obp/tambah') ?>" class="btn btn-outline-primary shadow-sm">
-                                <i class="bi bi-node-plus"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-center">2</td>
-                        <td>Melihat senarai OBP</td>
-                        <td class="text-center"><?= $bilanganObp ?></td>
-                        <td class="text-center">
-                        <a href="<?= site_url('obp/senarai') ?>" class="btn btn-outline-primary shadow-sm">
-                                <i class="bi bi-inboxes"></i>
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-body">
-            <h1 class="card-title">RIMS@SISMAP</h1>
-            <h2 class="text-primary">PARLIMEN</h2>
-            <div class="table-responsive">
-                <table class="table table-sm table-bordered">
-                    <tr>
-                        <th class="text-center">BIL</th>
-                        <th width="50%">TUGASAN</th>
-                        <th class="text-center">BILANGAN LAPORAN</th>
-                        <th class="text-center">TINDAKAN</th>
-                    </tr>
-                    <tr>
-                        <td class="text-center">1</td>
-                        <td>Sila pastikan nama daerah mengundi dan bilangan pengundi mengikut data terakhir yang telah diedarkan oleh urus setia.</td>
-                        <td class="text-center"><?= $bilanganDmParlimen ?></td>
-                        <td class="text-center">
-                            <a href="<?= site_url('parlimen/tambah_dm') ?>" class="btn btn-outline-primary shadow-sm">
-                                <i class="bi bi-gear-fill"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-center">2</td>
-                        <td>Memasukkan data Jangkaan Calon.</td>
-                        <td class="text-center"><?= $bilanganJangkaanCalonParlimen ?></td>
-                        <td class="text-center">
-                            <a href="<?= site_url('winnable_candidate/daftar') ?>" class="btn btn-outline-primary shadow-sm">
-                                <i class="bi bi-plus-circle"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-center">3</td>
-                        <td>Mengemaskini maklumat Jangkaan Calon.</td>
-                        <td class="text-center"><?= $bilanganJangkaanCalonParlimen ?></td>
-                        <td class="text-center">
-                            <?php foreach($senarai_tugas_parlimen as $parlimen): ?>
-                                <a href="<?= site_url('winnable_candidate/kemaskini_parlimen/'.$parlimen->pt_bil) ?>" class="btn btn-outline-primary shadow-sm m-1"><i class="bi bi-gear-fill"></i> <?= strtoupper($parlimen->pt_nama) ?></a>
-                            <?php endforeach; ?>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-center">4</td>
-                        <td>Membuat rumusan kekuatan dan kelemahan Jangkaan Calon.</td>
-                        <td class="text-center"><?= $bilanganJangkaanCalonParlimen ?></td>
-                        <td class="text-center">
-                            <?php foreach($senarai_tugas_parlimen as $parlimen): ?>
-                                <a href="<?= site_url('winnable_candidate/kemaskini_parlimen/'.$parlimen->pt_bil) ?>" class="btn btn-outline-primary shadow-sm m-1"><i class="bi bi-gear-fill"></i> <?= strtoupper($parlimen->pt_nama) ?></a>
-                            <?php endforeach; ?>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-center">5</td>
-                        <td>Mengemaskini maklumat pencalonan pilihan raya.</td>
-                        <td class="text-center"><?= $bilanganCalonPru ?></td>
-                        <td class="text-center">
-                            <a href="<?= site_url('pencalonan/senarai') ?>" class="btn btn-outline-primary shadow-sm m-1"><i class="bi bi-gear-fill"></i> Senarai Calon</a>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-body">
-            <h1 class="card-title">RIMS@SISMAP</h1>
-            <div class="row g-3">
-            <?php if(!empty($senarai_tugas_parlimen)): ?>
-                <div class="col-12 col-lg-6">
-                <p><strong>Parlimen</strong></p>
-                <ol>
-                    <li class="mb-3">Mengemaskini maklumat pencalonan pilihan raya.<br />
-                    <div class="row g-3">
-                        <?php foreach($senarai_pru_parlimen as $p_parlimen): 
-                        ?>
-                            <div class="col-12 col-lg-6">
-                                <?php echo anchor('pencalonan/maklumat_pencalonan/'.$p_parlimen->pilihanraya_bil, 'Senarai Pencalonan '.$p_parlimen->pilihanraya_nama, "class='btn btn-primary w-100 mt-1'"); ?>
-                            </div>
-                        <?php endforeach; ?>
-                        </div>
-                    </li>
-                    <li class="mb-3">Membuat grading mengikut Daerah Mengundi. Culaan SISMAP.<br />
-                        <div class="row g-3">
-                        <?php 
-                        if($konfigurasiGradingLama == 'BUKA'):
-                        foreach($senarai_pru_parlimen as $p_parlimen): 
-                        $pp2 = $data_pilihanraya->pilihanraya($p_parlimen);
-                        ?>
-                            <div class="col-12 col-lg-6">
-                                <?php echo anchor('grading/pilihanraya/'.$pp2->pilihanraya_bil, 'Kemaskini Maklumat Grading '.$pp2->pilihanraya_nama, "class='btn btn-primary w-100 mt-1'"); ?>
-                            </div>
-                        <?php endforeach; 
-                        endif;
-                        ?>
-
-                        <?php foreach($senaraiParlimenPilihanraya as $parlimen): ?>
-                            <div class="col-12 col-lg-6">
-                                <?= form_open('grading/parlimenPilihanraya') ?>
-                                    <input type="hidden" name="inputParlimenBil" value="<?= $parlimen->tpt_parlimen_bil ?>">
-                                    <input type="hidden" name="inputPilihanrayaBil" value="<?= $parlimen->ppt_pilihanraya_bil ?>">
-                                    <button type="submit" class="btn btn-outline-primary shadow-sm">Kemaskini Grading Parlimen <?= $parlimen->pt_nama ?> untuk <?= $parlimen->pilihanraya_singkatan ?></button>
-                                </form>
-                            </div>
-                        <?php endforeach; ?>
-
-                        </div>
-                    </li> 
-                </ol>
-                </div>
-            <?php endif; ?>
-            <?php if(!empty($senarai_tugas_dun)): ?>
-                <div class="col-12 col-lg-6">
-                <p><strong>DUN</strong></p>
-                <ol>
-                    <li class="mb-3">Sila pastikan nama daerah mengundi dan bilangan pengundi mengikut data terakhir yang telah diedarkan oleh urus setia.<br />
-                    <div class="row g-3">
-                    <div class="col-12 col-lg-12">
-                    <?php echo anchor('dun/tambah_dm', 'Kemaskini Daerah Mengundi DUN', "class='btn btn-secondary w-100 mt-1'"); ?>
-                    </div>
-                    </div>
-                    </li>
-                    <li class="mb-3">Memasukkan data jangkaan calon DUN.<br />
-                    <div class="row g-3">
-                    <div class="col-12 col-lg-12">
-                    <?php echo anchor('dun/tambah_jangkaan_calon', 'Tambah Jangkaan Calon DUN', "class='btn btn-secondary w-100 mt-1'"); ?>
-                    </div>
-                    </div>
-                    </li>
-                    <li class="mb-3">Mengemaskini maklumat jangkaan calon DUN.<br />
-                    <div class="row g-3">
-                    <?php foreach($senarai_tugas_dun as $tugas): 
-                            $dun_nama = $data_dun->dun_bil($tugas->tdt_dun_bil)->dun_nama; 
-                        ?>
-                    <div class="col-12 col-lg-6">
-                    <?php echo anchor('dun/kemaskini_jangkaan_dun/'.$tugas->tdt_dun_bil, 'Kemaskini Jangkaan Calon DUN '.$dun_nama, "class='btn btn-secondary w-100 mt-1'"); ?>
-                    </div>
-                    <?php endforeach; ?>
-                    </div>
-                    </li>
-                    <li class="mb-3">Membuat rumusan kekuatan dan kelemahan calon.<br />
-                    <div class="row g-3">
-                    <?php foreach($senarai_tugas_dun as $tugas): 
-                            $dun_nama = $data_dun->dun_bil($tugas->tdt_dun_bil)->dun_nama; 
-                        ?>
-                    <div class="col-12 col-lg-6">
-                    <?php echo anchor('dun/kemaskini_jangkaan_dun/'.$tugas->tdt_dun_bil, 'Kemaskini Jangkaan Calon DUN '.$dun_nama, "class='btn btn-secondary w-100 mt-1'"); ?>
-                    </div>
-                    <?php endforeach; ?>
-                    </div>
-                    </li>
-                    <li class="mb-3">Mengemaskini maklumat pencalonan pilihan raya.<br />
-                    <div class="row g-3">
-                        <?php foreach($senarai_pru_dun as $p_dun): 
-                        ?>
-                            <div class="col-12 col-lg-6">
-                                <?php echo anchor('pencalonan/maklumat_pencalonan/'.$p_dun->pilihanraya_bil, 'Senarai Pencalonan '.$p_dun->pilihanraya_nama, "class='btn btn-secondary w-100 mt-1'"); ?>
-                            </div>
-                        <?php endforeach; ?>
-                        </div>
-                    </li>
-                    <li class="mb-3">Membuat grading mengikut Daerah Mengundi. Culaan SISMAP.<br />
-                        <div class="row g-3">
-                        <?php 
-                        if($konfigurasiGradingLama == 'BUKA'):
-                        foreach($senarai_pru_dun as $p_dun): 
-                        ?>
-                            <div class="col-12 col-lg-6">
-                                <?php echo anchor('grading/pilihanraya/'.$p_dun->pdt_pilihanraya_bil, 'Kemaskini Maklumat Grading '.$p_dun->pilihanraya_nama, "class='btn btn-secondary w-100 mt-1'"); ?>
-                            </div>
-                        <?php endforeach; 
-                        endif; ?>
-
-                        <?php foreach($senaraiDunPilihanraya as $dun): ?>
-                            <div class="col-12 col-lg-6">
-                                <?= form_open('grading/dunPilihanraya') ?>
-                                    <input type="hidden" name="inputDunBil" value="<?= $dun->tdt_dun_bil ?>">
-                                    <input type="hidden" name="inputPilihanrayaBil" value="<?= $dun->pdt_pilihanraya_bil ?>">
-                                    <button type="submit" class="btn btn-outline-secondary shadow-sm">Kemaskini Grading DUN <?= $dun->dun_nama ?> untuk <?= $dun->pilihanraya_singkatan ?></button>
-                                </form>
-                            </div>
-                        <?php endforeach; 
-                        ?>
-
-                        </div>
-                    </li>
-                    <li class="mb-3">
-                        Mengemaskini maklumat aktiviti kempen calon. <br />
-                        <div class="row g-3">
-                            <div class="col-12 col-lg-6">
-                                <a href="<?= site_url('kempen') ?>" class="btn btn-secondary w-100 mt-1">Laporan Aktiviti Kempen Calon</a>
-                            </div>
-                        </div>
-                    </li>
-                </ol>
-            </div>
-            <?php endif; ?>
-            </div>
-                     
-            
-
-        </div>
-    </div>
-
-    <?php if(!empty($senaraiTugasanPru)): ?>
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">RIMS@SISMAP - Senarai Tugasan Pilihan Raya</h5>
-
-                            <div class="table-responsive">
-                                <table class="table table-sm table-bordered table-hover mb-4">
-                <thead>
-                    <tr class="bg-primary">
-                        <th class="text-center">BIL</th>
-                        <th class="text-center">TUGASAN</th>
-                        <th class="text-center">BILANGAN LAPORAN</th>
-                        <th class="text-center">TINDAKAN</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="text-center">1</td>
-                        <td colspan=2>Mengisi borang Laporan Aktiviti Kempen Pilihan Raya</td>
-                        <td class="text-center">
-                            <a href="<?= site_url('kempen/tambah') ?>" class="btn btn-outline-primary shadow-sm">
-                                <i class="bi bi-node-plus"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-center">2</td>
-                        <td>Melihat senarai Laporan Aktiviti Kempen Pilihan Raya keseluruhan</td>
-                        <td class="text-center"><?= $bilanganLaporanAktivitiKempen ?></td>
-                        <td class="text-center">
-                        <a href="<?= site_url('kempen') ?>" class="btn btn-outline-primary shadow-sm">
-                                <i class="bi bi-inboxes"></i>
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-                            </div>
-                            
-                            <div class="table-responsive">
-                                <table class="table table-hover datatable">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">Nombor Siri</th>
-                                            <th scope="col">Pilihan Raya</th>
-                                            <th scope="col">Tarikh Lantikan</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach($senaraiTugasanPru as $tugasan): ?>
-                                        <tr>
-                                            <th scope="row"><?= $tugasan->pg_bil ?></th>
-                                            <td><?= strtoupper($tugasan->pru_nama) ?></td>
-                                            <td><?= date('d M Y, h:i A', strtotime($tugasan->pg_dicipta_pada)) ?></td>
-                                        </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                        </div>
-                    </div>
-            <?php endif; ?>
-
-    
-    <div class="card">
-        <div class="card-body">
-            <h1 class="card-title">RIMS@BENCANA</h1>
-            <table class="table table-sm table-bordered">
-                <thead>
-                    <tr>
-                        <th class="text-center">BIL</th>
-                        <th class="text-center">TUGASAN</th>
-                        <th class="text-center">BILANGAN LAPORAN</th>
-                        <th class="text-center">TINDAKAN</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="text-center">1</td>
-                        <td colspan=2>Mengisi borang laporan</td>
-                        <td class="text-center">
-                            <a href="<?= site_url('bencana/tambah') ?>" class="btn btn-outline-primary shadow-sm">
-                                <i class="bi bi-node-plus"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-center">2</td>
-                        <td>Melihat senarai laporan</td>
-                        <td class="text-end"><?= $bilanganLaporanBencana ?></td>
-                        <td class="text-center">
-                        <a href="<?= site_url('bencana/senarai') ?>" class="btn btn-outline-primary shadow-sm">
-                                <i class="bi bi-inboxes"></i>
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="alert alert-success">
-            Maklumat RIMS@BENCANA akan mula direkodkan pada <strong>28 NOVEMBER 2024 (RABU)</strong>.
-            </div>
-        </div>
-    </div>
-
 
     </section>
 
