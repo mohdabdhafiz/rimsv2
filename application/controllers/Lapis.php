@@ -57,7 +57,7 @@
 
         // 2. Dapatkan maklumat pengguna yang sedang login
         //$pengguna = $this->pengguna();
-        $pelapor_bil = $this->input->post('input_pelapor');
+        $pelapor_bil = $this->input->post("input_pelapor");
         $pengguna = $this->pengguna_model->pengguna($pelapor_bil);
 
         // 3. Dapatkan nama-nama berdasarkan ID dari borang lama
@@ -134,8 +134,76 @@
             'lapis_status' => 'Laporan Diterima' // Status lalai
         ];
 
+        $kriteria_semakan = [
+            'lapis_tarikh_laporan' => $data_laporan_baru['lapis_tarikh_laporan'],
+            'lapis_negeri_bil' => $data_laporan_baru['lapis_negeri_bil'],
+            'lapis_daerah_bil' => $data_laporan_baru['lapis_daerah_bil'],
+            'lapis_parlimen_bil' => $data_laporan_baru['lapis_parlimen_bil'],
+            'lapis_dun_bil' => $data_laporan_baru['lapis_dun_bil'],
+            'lapis_dm_bil' => $data_laporan_baru['lapis_dm_bil'],
+            'lapis_tajuk_isu' => $data_laporan_baru['lapis_tajuk_isu'],
+            'lapis_ringkasan_isu' => $data_laporan_baru['lapis_ringkasan_isu'],
+            'lapis_kluster_bil' => $data_laporan_baru['lapis_kluster_bil'],
+            'lapis_pelapor_bil' => $data_laporan_baru['lapis_pelapor_bil']
+        ];
+
+         if ($this->lapis2_model->semak_laporan_sama($kriteria_semakan)) {
+            // Jika wujud, set flashdata dan redirect
+            $this->session->set_flashdata('error', 'Gagal! Laporan yang sama mengenai isu ini telah wujud dalam sistem.');
+            redirect('lapis'); // Redirect ke halaman utama modul lapis
+            return; // Hentikan perlaksanaan fungsi
+        }
+
         // 5. Panggil model BARU untuk simpan data ke dalam lapis_tb
         $this->lapis2_model->tambah_laporan($data_laporan_baru);
+        // Set flashdata untuk mesej berjaya (pilihan)
+        $this->session->set_flashdata('success', 'Laporan baru berjaya disimpan.');
+    }
+
+    public function kedudukan_pelapor()
+    {
+        $sesi = $this->sesi();
+        $data['pengguna'] = $this->pengguna();
+        $data = array_merge($data, $this->templates($sesi));
+        
+        // Memuatkan model yang diperlukan
+        $this->load->model(['lapis_model', 'pengguna_model']);
+
+        $senaraiPengguna = $this->pengguna_model->senaraiPelaporKedudukan();
+
+        $senarai_pelapor_mentah = []; // Array sementara untuk kumpul data
+
+        foreach($senaraiPengguna as $sp){
+            $senarai_pelapor_mentah[] = [
+                'pelaporBil' => $sp->penggunaBil,
+                'pelaporNama' => $sp->penggunaNama,
+                'pelaporJawatan' => $sp->penggunaJawatan,
+                'pelaporPenempatan' => $sp->penggunaPenempatan,
+                'jumlahLaporan' => $this->lapis_model->bilanganLaporanTahun($sp->penggunaBil, date("Y"))    
+            ];
+        }
+
+        // === BAHAGIAN MENYUSUN DATA (VERSI PHP 5) ===
+        
+        // Menyusun array berdasarkan 'jumlahLaporan' secara menurun (DESC).
+        usort($senarai_pelapor_mentah, function($a, $b) {
+            if ($a['jumlahLaporan'] < $b['jumlahLaporan']) {
+                return 1; // Pindahkan $a ke bawah (kerana nilainya lebih kecil)
+            } elseif ($a['jumlahLaporan'] > $b['jumlahLaporan']) {
+                return -1; // Pindahkan $a ke atas (kerana nilainya lebih besar)
+            } else {
+                return 0; // Kekalkan kedudukan jika sama
+            }
+        });
+
+        // Masukkan data yang telah disusun ke dalam $data
+        $data['senarai_pelapor'] = $senarai_pelapor_mentah;
+
+        // Memuatkan data ke dalam view untuk paparan
+        $data['content'] = [
+            "lapis/kedudukan_pelapor_view"
+        ];
+        $this->load->view("lapis/templates", $data);
     }
 
     public function laporanTolak($klusterBil){
@@ -2115,37 +2183,6 @@ public function prosesDraf(){
         
     }
 
-    /**
-     * FUNGSI BAHARU: Untuk mendapatkan data rumusan bagi papan pemuka LAPIS.
-     */
-    private function _bilanganLapis()
-    {
-        $this->load->model('lapis2_model'); // Model baharu yang berinteraksi dengan lapis_tb
-        $this->load->model('kluster_isu_model');
-
-        $bilangan = [];
-
-        // 1. Dapatkan jumlah keseluruhan laporan (andaian fungsi wujud dalam model)
-        $bilangan['jumlah_laporan'] = $this->lapis2_model->kira_semua();
-
-        // 2. Dapatkan jumlah laporan yang ditolak (andaian fungsi wujud dalam model)
-        $bilangan['laporan_ditolak'] = $this->lapis2_model->kira_mengikut_status('Ditolak');
-
-        // TAMBAHKAN BARIS INI untuk mendapatkan 5 laporan terkini
-        $bilangan['laporan_terkini'] = $this->lapis2_model->dapatkan_laporan_terkini(5);
-
-
-        // 3. Dapatkan taburan laporan mengikut kluster untuk tujuan carta
-        $senaraiKluster = $this->kluster_isu_model->senarai();
-        $laporanPerKluster = [];
-        foreach ($senaraiKluster as $kluster) {
-            $laporanPerKluster[$kluster->kit_nama] = $this->lapis2_model->kira_mengikut_kluster($kluster->kit_bil);
-        }
-        $bilangan['pecahan_kluster'] = $laporanPerKluster;
-
-        return $bilangan;
-    }
-
     public function index()
     {
 
@@ -2189,14 +2226,20 @@ public function prosesDraf(){
         }
 
         switch($peranan){
-             case 'URUSETIA' :
-                // 1. Panggil data untuk papan pemuka
-                $data['bilanganLapis'] = $this->_bilanganLapis(); 
-                
-                // 2. Muatkan paparan secara terus (header, content, footer)
-                $this->load->view('susunletak/atas', $data);
-                $this->load->view('lapis/utama'); // Fail papan pemuka Lapis yang kita reka
-                $this->load->view('susunletak/bawah');
+            case 'URUSETIA' :
+                $sesi = $this->sesi();
+                $data = array_merge($data, $this->templates($sesi));
+                $data['content'] = [
+                    "lapis/utama"
+                ];
+                $this->load->view("lapis/templates", $data);
+                break;
+            case 'URUSETIA1' :
+                $this->load->model('negeri_model');
+                $this->load->model('kluster_isu_model');
+                $data['senaraiNegeri'] = $this->negeri_model->senarai();
+                $data['senaraiKluster'] = $this->kluster_isu_model->senarai();
+                $this->load->view('urusetia_na/lapis/utama', $data);
                 break;
         }
 
@@ -2259,9 +2302,11 @@ public function ppd(){
 public function proses_politik()
 {
     $this->load->model('isu_politik_model');
-    $this->isu_politik_model->tambah(); 
     $this->simpan_ke_lapis_tb('politik');
+    $this->isu_politik_model->tambah(); 
     redirect('lapis');
+    return;
+    
 }
 
 public function politik()
@@ -2311,8 +2356,8 @@ public function politik()
 public function proses_ekonomi()
 {
     $this->load->model('isu_ekonomi_model');
-    $this->isu_ekonomi_model->tambah();
     $this->simpan_ke_lapis_tb('ekonomi');
+    $this->isu_ekonomi_model->tambah();
     redirect('lapis');
 }
 
@@ -2351,8 +2396,8 @@ public function ekonomi()
 public function proses_alamsekitar()
 {
     $this->load->model('isu_alamsekitar_model');
-    $this->isu_alamsekitar_model->tambah();
     $this->simpan_ke_lapis_tb('alamsekitar');
+    $this->isu_alamsekitar_model->tambah();
     redirect('lapis');
 }
 
@@ -2393,8 +2438,8 @@ public function alamsekitar()
 public function proses_kesihatan()
 {
     $this->load->model('isu_kesihatan_model');
-    $this->isu_kesihatan_model->tambah();
     $this->simpan_ke_lapis_tb('kesihatan');
+    $this->isu_kesihatan_model->tambah();
     redirect('lapis');
 }
 
@@ -2437,8 +2482,8 @@ public function kesihatan()
 public function proses_keselamatan()
 {
     $this->load->model('isu_keselamatan_model');
-    $this->isu_keselamatan_model->tambah();
     $this->simpan_ke_lapis_tb('keselamatan');
+    $this->isu_keselamatan_model->tambah();
     redirect('lapis');
 }
 
@@ -2493,8 +2538,8 @@ public function keselamatan()
 public function proses_sosial()
 {
     $this->load->model('isu_sosial_model');
-    $this->isu_sosial_model->tambah();
     $this->simpan_ke_lapis_tb('sosial');
+    $this->isu_sosial_model->tambah();
     redirect('lapis');
 }
 
@@ -2535,8 +2580,8 @@ public function sosial()
 public function proses_infrastruktur()
 {
     $this->load->model('isu_infrastruktur_model');
-    $this->isu_infrastruktur_model->tambah();
     $this->simpan_ke_lapis_tb('infrastruktur');
+    $this->isu_infrastruktur_model->tambah();
     redirect('lapis');
 }
 
@@ -2575,9 +2620,10 @@ public function infrastruktur()
 public function proses_telekomunikasi()
 {
     $this->load->library('form_validation');
+    $this->load->library('upload');
     $this->form_validation->set_rules('input_pelapor', 'Pilihan Pelapor', 'required');
     $this->form_validation->set_rules('input_daerah', 'Pilihan Daerah', 'required');
-    $this->form_validation->set_rules('input_tajuk', 'Pilihan Isu Telekomunikasi', 'required');
+    $this->form_validation->set_rules('input_tajuk_isu', 'Pilihan Isu Telekomunikasi', 'required');
     $this->form_validation->set_error_delimiters("<div class='alert alert-danger'>", "</div>");
     $this->form_validation->set_message('required', 'Sila penuhi ruangan {field}');
     $this->load->model('isu_telekomunikasi_model');
@@ -2594,31 +2640,31 @@ public function proses_telekomunikasi()
         $config['allowed_types'] = '*';
         $config['file_name'] = $filename;
         $config['overwrite'] = FALSE;
-
+        
         $this->load->library('upload', $config);
         $this->upload->initialize($config);
         if($isu->isu_telekomunikasi == 'Rangkaian Internet / Data'){
         if ( ! $this->upload->do_upload('input_gambar'))
-        {
-            $error = array(
-                'error' => $this->upload->display_errors()
-            );
-            foreach($error as $e){
-                echo $e;
+            {
+                $error = array(
+                    'error' => $this->upload->display_errors()
+                );
+                foreach($error as $e){
+                    echo $e;
+                }
+                //$this->telekomunikasi();
             }
-            $this->telekomunikasi();
+            else
+            {
+                $data = array(
+                    'upload_data' => $this->upload->data()
+                );
+                $this->isu_telekomunikasi_model->tambah_internet($telekomunikasiBil, $this->upload->data('file_name'));
+                // --- PENAMBAHAN BARU UNTUK RIMS@LAPIS 2.0 ---
+                // --- TAMAT PENAMBAHAN ---
+            }
         }
-        else
-        {
-            $data = array(
-                'upload_data' => $this->upload->data()
-            );
-            $this->isu_telekomunikasi_model->tambah_internet($telekomunikasiBil, $this->upload->data('file_name'));
-            // --- PENAMBAHAN BARU UNTUK RIMS@LAPIS 2.0 ---
-            $this->simpan_ke_lapis_tb('telekomunikasi');
-            // --- TAMAT PENAMBAHAN ---
-        }
-        }
+        $this->simpan_ke_lapis_tb('telekomunikasi');
         redirect('lapis');
     }
 }

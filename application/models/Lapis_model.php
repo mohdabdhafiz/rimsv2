@@ -22,4 +22,6 @@ class Lapis_model extends CI_Model
         return $bilanganLaporan;
     }
 
+    
+
 }

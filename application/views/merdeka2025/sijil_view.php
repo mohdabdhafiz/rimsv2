@@ -17,15 +17,18 @@
             <?php if ($this->session->userdata('sijil_access_granted')): ?>
                 <!-- BAHAGIAN PENTADBIR JIKA PIN BETUL -->
                 <div class="mb-8">
-                    <h2 class="text-xl font-semibold mb-2">Hantar Sijil Pukal</h2>
-                    <p class="mb-4 text-sm">Hantar e-mel sijil kepada semua peserta baharu dari Google Sheet yang belum menerimanya.</p>
-                    <a href="<?php echo site_url('merdeka/proses_sijil'); ?>" class="w-full inline-block bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700">
-                        Mula Proses & Hantar Sijil
-                    </a>
-                    <!-- TAMBAH PAUTAN INI -->
-                    <a href="<?php echo site_url('merdeka/senarai_sijil'); ?>" class="mt-2 w-full inline-block bg-gray-200 text-gray-700 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">
-                        Lihat Senarai Penerima Sijil
-                    </a>
+                    <h2 class="text-xl font-semibold mb-2">Tindakan Pukal</h2>
+                    <div class="space-y-2">
+                        <a href="<?php echo site_url('merdeka/muat_naik'); ?>" class="w-full inline-block bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700">
+                            Muat Naik Senarai Peserta (Excel/CSV)
+                        </a>
+                        <a href="<?php echo site_url('merdeka/proses_sijil'); ?>" class="w-full inline-block bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700">
+                            Hantar Sijil Pukal
+                        </a>
+                        <a href="<?php echo site_url('merdeka/senarai_sijil'); ?>" class="w-full inline-block bg-gray-200 text-gray-700 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">
+                            Lihat Senarai Penerima Sijil
+                        </a>
+                    </div>
                 </div>
 
                 <hr class="my-6 border-t-2 border-gray-200 border-dashed">

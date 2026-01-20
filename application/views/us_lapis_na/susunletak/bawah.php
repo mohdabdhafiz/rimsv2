@@ -24,7 +24,15 @@
   <!-- Template Main JS File -->
   <script src="<?php echo base_url(); ?>/assets/js/main.js"></script>
 
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
   <script>
+    AOS.init({
+      duration: 800, // Animation duration in milliseconds
+      easing: 'ease-in-out', // Animation easing
+      once: true // Whether animation should happen only once - while scrolling down
+    });
+
     $(document).ready(function() {
         // Mengaktifkan DataTables pada jadual laporan
         $('#laporanTable').DataTable({

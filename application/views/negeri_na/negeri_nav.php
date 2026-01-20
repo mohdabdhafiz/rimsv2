@@ -6,7 +6,7 @@
         </div>
         <div class="row g-3 mb-3">
 
-                <div class="col-12 col-lg-4 col-md-4 col-sm-6 d-flex align-items-stretch">
+                <div class="col-12 col-lg-3 col-md-4 col-sm-6 d-flex align-items-stretch">
                         <div class="p-3 border rounded d-flex flex-column bg-white w-100">
                                 <div class="my-auto text-center mb-3">
                                         <h1 class="display-3"><?= $bilanganJangkaanCalonParlimen; ?></h1>
@@ -18,7 +18,7 @@
                         </div>
                 </div>
 
-                <div class="col-12 col-lg-4 col-md-4 col-sm-6 d-flex align-items-stretch">
+                <div class="col-12 col-lg-3 col-md-4 col-sm-6 d-flex align-items-stretch">
                         <div class="p-3 border rounded d-flex flex-column bg-white w-100">
                                 <div class="my-auto text-center mb-3">
                                         <h1 class="display-3"><?= $bilanganJangkaanCalonDun; ?></h1>
@@ -30,7 +30,7 @@
                         </div>
                 </div>
 
-                <div class="col-12 col-lg-4 col-md-4 col-sm-6 d-flex align-items-stretch">
+                <div class="col-12 col-lg-3 col-md-4 col-sm-6 d-flex align-items-stretch">
                         <div class="p-3 border rounded d-flex flex-column bg-white w-100">
                                 <div class="my-auto text-center mb-3">
                                         <h1 class="display-3"><?= $bilanganPru ?></h1>
@@ -38,6 +38,17 @@
                                 </div>
                                 <div class="mt-auto">
                                         <a href="<?= site_url('pilihanraya') ?>" class="btn btn-primary w-100">Lihat</a>
+                                </div>
+                        </div>
+                </div>
+                <div class="col-12 col-lg-3 col-md-4 col-sm-6 d-flex align-items-stretch">
+                        <div class="p-3 border rounded d-flex flex-column bg-white w-100">
+                                <div class="my-auto text-center mb-3">
+                                        <h1 class="display-3"><?= $bilanganLaporanAktivitiKempen ?></h1>
+                                        <p class="mb-0">Laporan Aktiviti Kempen</p>
+                                </div>
+                                <div class="mt-auto">
+                                        <a href="<?= site_url('kempen') ?>" class="btn btn-primary w-100">Lihat</a>
                                 </div>
                         </div>
                 </div>

@@ -52,6 +52,9 @@ $this->load->view('us_sismap_na/susunletak/sidebar');
                                         <div class="col-auto">
                                             <a class="btn btn-outline-primary shadow-sm" href="<?= site_url('pencalonan/maklumat_pencalonan/'.$pru->pilihanraya_bil) ?>">Pencalonan</a>
                                         </div>
+                                        <div class="col-auto">
+                                            <a class="btn btn-outline-secondary shadow-sm" href="<?= site_url('pencalonan/muatTurunPencalonan/'.$pru->pilihanraya_bil) ?>">Muat Turun</a>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>

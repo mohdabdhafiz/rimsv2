@@ -5,6 +5,22 @@ class Pilihanraya_model extends CI_Model {
 
     protected $table = 'pilihanraya_tb';
 
+    public function pr($pruBil){
+        $this->db->select('
+            pilihanraya_bil AS pruBil,
+            pilihanraya_nama AS pruNama,
+            pilihanraya_singkatan AS pruSingkatan,
+            pilihanraya_tahun AS pruTahun,
+            pilihanraya_penamaan_calon AS pruPenamaanCalon,
+            pilihanraya_lock_status AS pruLockStatus,
+            pilihanraya_status AS pruStatus,
+            pilihanraya_jenis AS pruJenis
+        ');
+        $this->db->where('pilihanraya_bil', $pruBil);
+        $query = $this->db->get($this->table);
+        return $query->row();
+    }
+
     public function bilanganLaporanUtama(){
         $this->db->select("COUNT(*) AS bilanganLaporan");
         $query = $this->db->get($this->table);
@@ -104,6 +120,13 @@ class Pilihanraya_model extends CI_Model {
     }
 
     public function senaraiPilihanrayaDunPeranan($perananBil){
+        // FIX: Add a specific SELECT clause to prevent the GROUP BY error.
+        $this->db->select('
+            pilihanraya_tb.*, 
+            MIN(pilihanraya_dun_tb.pdt_bil) as pdt_bil,
+            MIN(dun_tb.dun_nama) as dun_nama,
+            MIN(negeri_tb.nt_nama) as negeri_nama
+        ');
         $this->db->join('pilihanraya_dun_tb', 'pilihanraya_dun_tb.pdt_pilihanraya_bil = pilihanraya_tb.pilihanraya_bil', 'left');
         $this->db->join('dun_tb', 'dun_tb.dun_bil = pilihanraya_dun_tb.pdt_dun_bil', 'left');
         $this->db->join('negeri_tb', 'negeri_tb.nt_nama = dun_tb.dun_negeri', 'left');
@@ -117,6 +140,12 @@ class Pilihanraya_model extends CI_Model {
     }
 
     public function senaraiPilihanrayaParlimenPeranan($perananBil){
+        $this->db->select('
+            pilihanraya_tb.*, 
+            MIN(pilihanraya_parlimen_tb.ppt_bil) as ppt_bil,
+            MIN(parlimen_tb.pt_nama) as parlimen_nama,
+            MIN(negeri_tb.nt_nama) as negeri_nama
+        ');
         $this->db->join('pilihanraya_parlimen_tb', 'pilihanraya_parlimen_tb.ppt_pilihanraya_bil = pilihanraya_tb.pilihanraya_bil', 'left');
         $this->db->join('parlimen_tb', 'parlimen_tb.pt_bil = pilihanraya_parlimen_tb.ppt_parlimen_bil', 'left');
         $this->db->join('negeri_tb', 'negeri_tb.nt_nama = parlimen_tb.pt_negeri', 'left');
@@ -210,6 +239,12 @@ class Pilihanraya_model extends CI_Model {
     }
 
     public function senarai(){
+        $column = [
+            '*',
+            '(SELECT COUNT(*) FROM pilihanraya_parlimen_tb WHERE pilihanraya_parlimen_tb.ppt_pilihanraya_bil = pilihanraya_tb.pilihanraya_bil) AS kerusiParlimenBilangan',
+            '(SELECT COUNT(*) FROM pilihanraya_dun_tb WHERE pilihanraya_dun_tb.pdt_pilihanraya_bil = pilihanraya_tb.pilihanraya_bil) AS kerusiDunBilangan'
+        ];
+        $this->db->select($column);
         $this->db->order_by('pilihanraya_tb.pilihanraya_penamaan_calon', 'DESC');
         $query = $this->db->get('pilihanraya_tb');
         return $query->result();
@@ -240,6 +275,48 @@ class Pilihanraya_model extends CI_Model {
         $this->db->join('dun_tb', 'dun_tb.dun_bil = pilihanraya_dun_tb.pdt_dun_bil');
         $this->db->where('pilihanraya_tb.pilihanraya_status', 'AKTIF');
         $this->db->where('dun_tb.dun_negeri', $negeri);
+        $this->db->group_by('pilihanraya_tb.pilihanraya_bil');
+        $this->db->order_by('pilihanraya_tb.pilihanraya_penamaan_calon', 'DESC');
+        $query = $this->db->get($this->table);
+        return $query->result();
+    }
+
+    public function senaraiPruParlimenAktifbyNegeri($senaraiNegeri)
+    {
+        $this->db->select('pilihanraya_tb.pilihanraya_bil AS pru_bil');
+        $this->db->select('pilihanraya_tb.pilihanraya_bil AS pruBil');
+        $this->db->select('UPPER(pilihanraya_tb.pilihanraya_nama) AS pruNama');
+        $this->db->select('pilihanraya_tb.pilihanraya_singkatan AS pruSingkatan');
+        $this->db->select('pilihanraya_bil, pilihanraya_nama, pilihanraya_jenis');
+        $this->db->join('pilihanraya_parlimen_tb', 'pilihanraya_parlimen_tb.ppt_pilihanraya_bil = pilihanraya_tb.pilihanraya_bil');
+        $this->db->join('parlimen_tb', 'parlimen_tb.pt_bil = pilihanraya_parlimen_tb.ppt_parlimen_bil');
+        $this->db->where('pilihanraya_tb.pilihanraya_status', 'AKTIF');
+        $this->db->group_start();
+        foreach($senaraiNegeri as $negeri){
+            $this->db->or_where('parlimen_tb.pt_negeri', $negeri->nt_nama);
+        }
+        $this->db->group_end();
+        $this->db->group_by('pilihanraya_tb.pilihanraya_bil');
+        $this->db->order_by('pilihanraya_tb.pilihanraya_penamaan_calon', 'DESC');
+        $query = $this->db->get($this->table);
+        return $query->result();
+    }
+
+    public function senaraiPruDunAktifbyNegeri($senaraiNegeri)
+    {
+        $this->db->select('pilihanraya_tb.pilihanraya_bil AS pru_bil');
+        $this->db->select('pilihanraya_tb.pilihanraya_bil AS pruBil');
+        $this->db->select('UPPER(pilihanraya_tb.pilihanraya_nama) AS pruNama');
+        $this->db->select('pilihanraya_tb.pilihanraya_singkatan AS pruSingkatan');
+        $this->db->select('pilihanraya_bil, pilihanraya_nama, pilihanraya_jenis');
+        $this->db->join('pilihanraya_dun_tb', 'pilihanraya_dun_tb.pdt_pilihanraya_bil = pilihanraya_tb.pilihanraya_bil');
+        $this->db->join('dun_tb', 'dun_tb.dun_bil = pilihanraya_dun_tb.pdt_dun_bil');
+        $this->db->where('pilihanraya_tb.pilihanraya_status', 'AKTIF');
+        $this->db->group_start();
+        foreach($senaraiNegeri as $negeri){
+            $this->db->or_where('dun_tb.dun_negeri', $negeri->nt_nama);
+        }
+        $this->db->group_end();
         $this->db->group_by('pilihanraya_tb.pilihanraya_bil');
         $this->db->order_by('pilihanraya_tb.pilihanraya_penamaan_calon', 'DESC');
         $query = $this->db->get($this->table);
@@ -287,6 +364,25 @@ class Pilihanraya_model extends CI_Model {
     public function selesai(){
         $this->db->select('pilihanraya_bil, pilihanraya_nama, pilihanraya_jenis');
         $this->db->where('pilihanraya_status', 'SELESAI');
+        $this->db->order_by('pilihanraya_penamaan_calon', 'DESC');
+        $query = $this->db->get($this->table);
+
+        return $query->result();
+    }
+
+    public function senaraiPruAktifIkutDun($senaraiDun){
+        $this->db->select('pilihanraya_tb.pilihanraya_bil AS pruBil');
+        $this->db->select('UPPER(pilihanraya_tb.pilihanraya_nama) AS pruNama');
+        $this->db->select('pilihanraya_tb.pilihanraya_singkatan AS pruSingkatan');
+        $this->db->select('pilihanraya_bil, pilihanraya_nama, pilihanraya_jenis');
+        $this->db->join('pilihanraya_dun_tb', 'pilihanraya_dun_tb.pdt_pilihanraya_bil = pilihanraya_tb.pilihanraya_bil', 'right');
+        $this->db->group_start();
+        foreach($senaraiDun as $dun){
+            $this->db->or_where('pilihanraya_dun_tb.pdt_dun_bil', $dun->dun_bil);
+        }   
+        $this->db->group_end();
+        $this->db->where('pilihanraya_status', 'AKTIF');
+        $this->db->group_by('pilihanraya_tb.pilihanraya_bil');
         $this->db->order_by('pilihanraya_penamaan_calon', 'DESC');
         $query = $this->db->get($this->table);
 

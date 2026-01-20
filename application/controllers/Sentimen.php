@@ -2,6 +2,246 @@
 class Sentimen extends CI_Controller
 {
 
+    
+
+    
+
+    
+
+    //======================================================================
+    // PRIVATE HELPER FUNCTIONS
+    //======================================================================
+
+    private function pengguna(){
+        $penggunaBil = $this->session->userdata("pengguna_bil");
+        $this->load->model("pengguna_model");
+        $pengguna = $this->pengguna_model->pengguna($penggunaBil);
+        return $pengguna;
+    }
+
+    private function sesi(){
+        $sesi = strtoupper($this->session->userdata("peranan"));
+        if(empty($sesi)){
+            redirect(base_url());
+        }
+        if(strpos($sesi, 'PPD') !== false){
+            $sesi = 'PPD';
+        }
+        if(strpos($sesi, 'NEGERI') !== false){
+            $sesi = 'NEGERI';
+        }
+        return $sesi;
+    }
+
+    private function template($sesi){
+        $sesi = strtoupper($sesi);
+        switch($sesi){
+            case 'URUSETIA' :
+                $view = "urussetia_na";
+                break;
+            case "DATA" :
+                $view = "us_sismap_na";
+                break;
+            case 'PPD' :
+                $view = "ppd_na";
+                break;
+            case 'NEGERI' :
+                $view = "negeri_na";
+                break;
+            case 'LAPIS' :
+                $view = "us_lapis_na";
+                break;
+            default :
+                redirect(base_url());
+        }
+        $template = [
+            "header" => "$view/susunletak/atas",
+            "sidebar" => "$view/susunletak/sidebar",
+            "navbar" => "$view/susunletak/navbar",
+            "footer" => "$view/susunletak/bawah"
+        ];
+        return $template;
+    }
+
+    private function renderView($viewData, $viewFiles)
+    {
+        $viewData['gunaView'] = $viewFiles;
+        $this->load->view("baseTemplate", $viewData);
+    }
+
+    // Dalam fail: Sentimen.php
+
+    // Masukkan ini ke dalam class Sentimen extends CI_Controller { ... }
+
+    public function data_dashboard_ajax() {
+        $sesi = $this->sesi();
+        $data['pengguna'] = $this->pengguna();       
+        // 1. Load Model
+        $this->load->model('sentimen_model');
+
+        switch($sesi){
+            case 'NEGERI' :
+                $this->load->model('negeri_model');
+                $senaraiNegeri = $this->negeri_model->senaraiTugasanNegeri($data['pengguna']->pengguna_peranan_bil);
+                $statistik = $this->sentimen_model->dapatkan_statistik_kad_info_negeri($senaraiNegeri);
+                $top_isu_raw = $this->sentimen_model->dapatkan_top_isu_sentimen_negeri(5, $senaraiNegeri);
+                $taburan_raw = $this->sentimen_model->dapatkan_taburan_sentimen_negeri($senaraiNegeri);
+                break;
+            default :
+                 // 2. Dapatkan Data Statistik (KPI)
+                $statistik = $this->sentimen_model->dapatkan_statistik_kad_info();
+                
+                // 3. Dapatkan Data Top 5 Isu
+                $top_isu_raw = $this->sentimen_model->dapatkan_top_isu_sentimen(5);
+                
+                // 4. Dapatkan Data Donut (Keseluruhan)
+                $taburan_raw = $this->sentimen_model->dapatkan_taburan_sentimen_keseluruhan();
+                break;
+        }
+
+        // 5. Susun Data (Manual Loop untuk ganti array_column)
+        
+        // A. Proses Data Bar Chart
+        $bar_labels = array();
+        $bar_positif = array();
+        $bar_neutral = array();
+        $bar_negatif = array();
+
+        if(!empty($top_isu_raw)) {
+            foreach ($top_isu_raw as $row) {
+                $bar_labels[] = $row->sit_isu;
+                $bar_positif[] = $row->positif;
+                $bar_neutral[] = $row->neutral;
+                $bar_negatif[] = $row->negatif;
+            }
+        }
+
+        // B. Proses Data Donut Chart
+        $donut_labels = array();
+        $donut_data = array();
+
+        if(!empty($taburan_raw)) {
+            foreach ($taburan_raw as $row) {
+                $donut_labels[] = $row->label;
+                $donut_data[] = $row->jumlah;
+            }
+        }
+
+        // 6. Bina Array Respons (Guna array() bukan [])
+        $response = array(
+            'kpi' => array(
+                'jumlah_pelapor' => isset($statistik->jumlah_pelapor) ? $statistik->jumlah_pelapor : 0,
+                'dominan' => isset($statistik->dominan_keseluruhan) ? $statistik->dominan_keseluruhan : 'Tiada Data',
+                'isu_kritikal' => isset($statistik->isu_paling_negatif) ? $statistik->isu_paling_negatif : 'Tiada Data',
+                'jumlah_kritikal' => isset($statistik->jumlah_paling_negatif) ? $statistik->jumlah_paling_negatif : 0
+            ),
+            'chart_bar' => array(
+                'labels' => $bar_labels,
+                'positif' => $bar_positif,
+                'neutral' => $bar_neutral,
+                'negatif' => $bar_negatif
+            ),
+            'chart_donut' => array(
+                'labels' => $donut_labels,
+                'data' => $donut_data
+            )
+        );
+
+        // 7. Hantar sebagai JSON
+        header('Content-Type: application/json');
+        echo json_encode($response);
+    }
+
+    public function padam_isu($isuBil){
+        if(empty($isuBil)){
+            redirect(base_url());
+        }
+        $this->load->model('sentimen_model');
+        $this->load->model('pengguna_model');
+        $sesi = strtoupper($this->session->userdata('peranan'));
+        if(empty($isuBil)){
+            redirect(base_url());
+        }
+        if($sesi == 'LAPIS'){
+            $this->sentimen_model->padamMaklumatIsu($isuBil);
+        }
+        redirect('sentimen/urus_tadbir');
+    }
+
+    /**
+     * Method untuk MEMPROSES data borang kemaskini.
+     * Borang anda akan di-POST ke sini.
+     */
+    public function prosesKemaskiniIsu() {
+        // 1. Hanya benarkan akses melalui POST
+        if ($this->input->server('REQUEST_METHOD') != 'POST') {
+            // Jika bukan POST, hantar pulang
+            redirect('sentimen/urus_tadbir'); // Atau ke mana-mana halaman utama
+        }
+        $this->load->model('sentimen_model');
+
+        // 2. Ambil ID dari medan tersembunyi 'id_isu'
+        $id = $this->input->post('id_isu');
+
+        // 3. Sediakan data untuk dikemaskini
+        $data_update = [
+            'sit_isu'        => $this->input->post('sit_isu'),
+            'sit_keterangan' => $this->input->post('sit_keterangan'),
+            'sit_aktif'      => $this->input->post('sit_aktif')
+        ];
+
+        // 4. Panggil model untuk lakukan kemaskini
+        $success = $this->sentimen_model->update_isu($id, $data_update);
+
+        // 5. Sediakan mesej 'flash' untuk maklum balas pengguna
+        if ($success) {
+            $this->session->set_flashdata('mesej_berjaya', 'Maklumat isu telah berjaya dikemaskini.');
+        } else {
+            $this->session->set_flashdata('mesej_gagal', 'Gagal mengemaskini maklumat isu.');
+        }
+
+        // 6. Redirect pengguna kembali ke halaman borang kemaskini
+        redirect('sentimen/kemaskini_isu/' . $id);
+    }
+
+    public function kemaskini_isu($isuBil){
+        $sesi = strtoupper($this->session->userdata('peranan'));
+        $penggunaBil = $this->session->userdata('pengguna_bil');
+        $this->load->model(['pengguna_model', 'sentimen_model']);
+        $data['pengguna'] = $this->pengguna_model->pengguna($penggunaBil);
+        if(strpos($sesi, 'NEGERI') !== FALSE){
+            $sesi = 'NEGERI';
+        }
+        switch($sesi){
+            case 'LAPIS' :
+                $data['isu'] = $this->sentimen_model->isu($isuBil);
+                $data = array_merge($data, $this->susunletak('us_lapis_na'));
+                break;
+            default :
+                redirect(base_url());
+        }     
+        $this->load->view('lpk/kemaskini_isu', $data);
+    }
+
+    public function lihat($isuBil){
+        $sesi = strtoupper($this->session->userdata('peranan'));
+        $penggunaBil = $this->session->userdata('pengguna_bil');
+        $this->load->model(['pengguna_model', 'sentimen_model']);
+        $data['pengguna'] = $this->pengguna_model->pengguna($penggunaBil);
+        if(strpos($sesi, 'NEGERI') !== FALSE){
+            $sesi = 'NEGERI';
+        }
+        switch($sesi){
+            case 'LAPIS' :
+                $data['isu'] = $this->sentimen_model->isu($isuBil);
+                $data = array_merge($data, $this->susunletak('us_lapis_na'));
+                break;
+            default :
+                redirect(base_url());
+        }     
+        $this->load->view('lpk/lihat_isu', $data);
+    }
+
     public function statusPenghantaran(){
         $sesi = strtoupper($this->session->userdata('peranan'));
         $penggunaBil = $this->session->userdata('pengguna_bil');
@@ -147,6 +387,8 @@ class Sentimen extends CI_Controller
             $data['pilihanNegeri'] = $this->negeri_model->negeri($data['negeri'])->nt_nama;
         }
 
+        $data['senaraiIsu'] = $this->sentimen_model->senaraiIsu();
+
         //ACCORDINGLY
         switch($sesi){
             case 'LAPIS'    :
@@ -211,6 +453,7 @@ class Sentimen extends CI_Controller
         }
         if($sentimen->stPelaporBil == $penggunaBil){
             $this->sentimen_model->padam($sentimenBil);
+            $this->sentimen_model->padamIsu($sentimenBil);
         }
         redirect('sentimen');
     }
@@ -557,41 +800,98 @@ class Sentimen extends CI_Controller
         }
     }
 
+    /**
+     * Fungsi memproses borang berdasarkan rujukan prosesTambah2.
+     * Mengandungi semakan peranan, validasi, dan memanggil satu fungsi model.
+     */
     public function prosesTambah()
     {
-        $sesi = strtoupper($this->session->userdata('peranan'));
-    if (strpos($sesi, 'PPD') !== FALSE) {
-        $sesi = 'PPD';
-    } elseif (strpos($sesi, 'NEGERI') !== FALSE) {
-        $sesi = 'NEGERI';
-    }
-
-    // Only allow PPD and NEGERI to proceed
-    if (in_array($sesi, ['PPD', 'NEGERI'])) {
         $this->load->library('form_validation');
         $this->load->model('sentimen_model');
-
-        // Validation rules
-        $this->form_validation->set_rules('inputTarikhLaporan', 'Tarikh Laporan', 'required');
-        $this->form_validation->set_rules('inputPelaporBil', 'Pelapor', 'required');
-        $this->form_validation->set_rules('inputDaerahBil', 'Daerah', 'required');
-        $this->form_validation->set_rules('inputSentimen', 'Pilihan Sentimen', 'required');
-        $this->form_validation->set_rules('inputAlasan', 'Alasan Sentimen', 'required');
-
-        $this->form_validation->set_error_delimiters("<div class='alert alert-danger'>", "</div>");
-        $this->form_validation->set_message('required', 'Sila penuhi ruangan {field}');
-
-        // Validate form
-        if ($this->form_validation->run() === FALSE) {
-            $this->borang();
-        } else {
-            $this->sentimen_model->tambah();
-            redirect('sentimen/senarai', 'refresh');
+        // 1. Semak Peranan Pengguna dari Sesi
+        $peranan = strtoupper($this->session->userdata('peranan'));
+        if (strpos($peranan, 'PPD') !== FALSE) {
+            $peranan = 'PPD';
+        } elseif (strpos($peranan, 'NEGERI') !== FALSE) {
+            $peranan = 'NEGERI';
         }
-    } else {
-        // Redirect unauthorized access
-        redirect(base_url());
+
+        // 2. Hanya benarkan peranan 'PPD' dan 'NEGERI'
+        if (in_array($peranan, array('PPD', 'NEGERI'))) {
+
+            // 3. Tetapkan Peraturan Validasi
+            $this->form_validation->set_rules('inputTarikhLaporan', 'Tarikh Laporan', 'required');
+            $this->form_validation->set_rules('inputPelaporBil', 'Pelapor', 'required|numeric');
+            $this->form_validation->set_rules('inputDaerahBil', 'Daerah', 'required|numeric');
+            $this->form_validation->set_rules('inputSentimen', 'Perasaan Terhadap Kerajaan', 'required');
+            $this->form_validation->set_rules('inputJenisPersepsi', 'Perkara', 'required');
+            $this->form_validation->set_rules('inputAlasan', 'Alasan', 'required');
+            
+            // Tetapkan gaya mesej ralat seperti dalam rujukan
+            $this->form_validation->set_error_delimiters('<div class="alert alert-danger alert-dismissible fade show" role="alert"><i class="bi bi-exclamation-octagon me-1"></i>', '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>');
+            $this->form_validation->set_message('required', 'Ruangan {field} wajib diisi.');
+
+            // 4. Jalankan Validasi
+            if ($this->form_validation->run() === FALSE) {
+                // Jika gagal, panggil semula fungsi yang memaparkan borang
+                // Ini akan mengekalkan input pengguna dan memaparkan ralat
+                $this->borang(); 
+            } else {
+                // 5. Jika berjaya, panggil fungsi 'tambah' dalam model
+                $simpan_berjaya = $this->sentimen_model->tambah();
+                
+                // Tambahan: Sediakan mesej maklum balas (feedback) kepada pengguna
+                if ($simpan_berjaya) {
+                    $this->session->set_flashdata('mesej_kejayaan', 'Laporan sentimen berjaya dihantar!');
+                } else {
+                    $this->session->set_flashdata('mesej_ralat', 'Gagal menghantar laporan. Berlaku ralat pada pangkalan data.');
+                }
+                
+                redirect('sentimen/senarai', 'refresh');
+            }
+
+        } else {
+            // Jika peranan tidak dibenarkan, halakan ke halaman utama
+            $this->session->set_flashdata('mesej_ralat', 'Anda tidak mempunyai kebenaran untuk mengakses halaman ini.');
+            redirect(base_url());
+        }
     }
+
+    public function prosesTambah2()
+    {
+        $sesi = strtoupper($this->session->userdata('peranan'));
+        if (strpos($sesi, 'PPD') !== FALSE) {
+            $sesi = 'PPD';
+        } elseif (strpos($sesi, 'NEGERI') !== FALSE) {
+            $sesi = 'NEGERI';
+        }
+
+        // Only allow PPD and NEGERI to proceed
+        if (in_array($sesi, ['PPD', 'NEGERI'])) {
+            $this->load->library('form_validation');
+            $this->load->model('sentimen_model');
+
+            // Validation rules
+            $this->form_validation->set_rules('inputTarikhLaporan', 'Tarikh Laporan', 'required');
+            $this->form_validation->set_rules('inputPelaporBil', 'Pelapor', 'required');
+            $this->form_validation->set_rules('inputDaerahBil', 'Daerah', 'required');
+            $this->form_validation->set_rules('inputSentimen', 'Pilihan Sentimen', 'required');
+            $this->form_validation->set_rules('inputAlasan', 'Alasan Sentimen', 'required');
+
+            $this->form_validation->set_error_delimiters("<div class='alert alert-danger'>", "</div>");
+            $this->form_validation->set_message('required', 'Sila penuhi ruangan {field}');
+
+            // Validate form
+            if ($this->form_validation->run() === FALSE) {
+                $this->borang();
+            } else {
+                $this->sentimen_model->tambah();
+                redirect('sentimen/senarai', 'refresh');
+            }
+        } else {
+            // Redirect unauthorized access
+            redirect(base_url());
+        }
     }
 
     public function borang()
@@ -605,10 +905,11 @@ class Sentimen extends CI_Controller
             $sesi = 'NEGERI';
         }
         $this->load->model('pengguna_model');
-        $this->load->model(['negeri_model', 'daerah_model']);
+        $this->load->model(['negeri_model', 'daerah_model', 'sentimen_model']);
         $this->load->model('parlimen_model');
         $this->load->model('dun_model');
         $data['pengguna'] = $this->pengguna_model->pengguna($penggunaBil);
+        $data['senaraiIsu'] = $this->sentimen_model->senaraiIsu();
         switch($sesi){
             case 'NEGERI' :
                 $senaraiNegeri = $this->negeri_model->senaraiTugasanNegeri($perananBil);
@@ -635,6 +936,107 @@ class Sentimen extends CI_Controller
         }
     }
 
+    /**
+     * Fungsi untuk menerima data POST dari borang dan menyimpannya ke pangkalan data.
+     * Dicetuskan oleh: <form action="<?= site_url('sentimen/simpan_isu_baharu') ?>">
+     */
+    public function simpan_isu_baharu()
+    {
+        $this->load->library('form_validation');
+        $this->load->model('sentimen_model');
+
+        // Tetapkan peraturan validasi untuk setiap input borang
+        $this->form_validation->set_rules('sit_isu', 'Nama Isu', 'trim|required', [
+            'required' => '%s wajib diisi.'
+        ]);
+        $this->form_validation->set_rules('sit_keterangan', 'Huraian', 'trim');
+
+        // Semak jika validasi berjaya
+        if ($this->form_validation->run() == FALSE) {
+            // Jika validasi gagal, paparkan semula borang bersama mesej ralat
+            // Anda perlu pastikan 'nama_view_borang' adalah nama fail view anda yang betul
+            $this->urus_tadbir();
+
+        } else {
+            // Jika validasi berjaya, sediakan data untuk dimasukkan ke dalam pangkalan data
+
+            // Uruskan input checkbox untuk 'sit_aktif'
+            // Jika 'sit_aktif' ditandakan, nilainya 'YA'. Jika tidak, 'TIDAK'.
+            $status_aktif = $this->input->post('sit_aktif') ? 'YA' : 'TIDAK';
+            
+            // Dapatkan ID pengguna dari sesi (anda mungkin perlu ubah suai 'pengguna_bil' mengikut struktur sesi anda)
+            $id_pengguna = $this->session->userdata('pengguna_bil');
+
+            $data_untuk_disimpan = [
+                'sit_isu'           => $this->input->post('sit_isu', TRUE), // TRUE untuk XSS filtering
+                'sit_keterangan'    => $this->input->post('sit_keterangan', TRUE),
+                'sit_aktif'         => $status_aktif,
+                'sit_tarikh_dibina' => date('Y-m-d H:i:s'), // Masukkan tarikh & masa semasa: 2025-10-09 15:20:32
+                'sit_pengguna_bil'  => $id_pengguna
+            ];
+
+            // Panggil fungsi dalam model untuk menyimpan data
+            $simpan_berjaya = $this->sentimen_model->tambah_isu_baharu($data_untuk_disimpan);
+
+            if ($simpan_berjaya) {
+                // Tetapkan mesej kejayaan menggunakan session flashdata
+                $this->session->set_flashdata('mesej_kejayaan', 'Maklumat isu baharu telah berjaya disimpan!');
+            } else {
+                // Tetapkan mesej ralat jika gagal disimpan
+                $this->session->set_flashdata('mesej_ralat', 'Gagal menyimpan maklumat isu. Sila cuba lagi.');
+            }
+            
+            // Halakan pengguna ke halaman senarai isu untuk melihat rekod yang baru dimasukkan
+            redirect('sentimen/urus_tadbir');
+        }
+    }
+
+    public function urus_tadbir(){
+        $this->load->model(['sentimen_model', 'pengguna_model']);
+        $sesi = $this->sesi();
+        $data["pengguna"] = $this->pengguna();
+        $data = array_merge($data, $this->template($sesi));
+
+        // 1. Dapatkan data untuk kad statistik
+        $data['statistik'] = $this->sentimen_model->dapatkan_statistik_kad_info();
+
+        // 2. Dapatkan data dan formatkan untuk Carta Donut
+        $taburan_raw = $this->sentimen_model->dapatkan_taburan_sentimen_keseluruhan();
+        $data['carta_donut'] = [
+            'labels' => array_column($taburan_raw, 'label'),
+            'data'   => array_column($taburan_raw, 'jumlah')
+        ];
+        
+        // 3. Dapatkan data dan formatkan untuk Carta Bar
+        $top_isu_raw = $this->sentimen_model->dapatkan_top_isu_sentimen(5);
+        $data['carta_bar'] = [
+            'labels'   => array_column($top_isu_raw, 'sit_isu'),
+            'positif'  => array_column($top_isu_raw, 'positif'),
+            'neutral'  => array_column($top_isu_raw, 'neutral'),
+            'negatif'  => array_column($top_isu_raw, 'negatif')
+        ];
+
+        // 4. Dapatkan data untuk jadual senarai isu
+        $data['senarai_isu'] = $this->sentimen_model->dapatkan_semua_isu_dengan_rumusan();
+
+        $this->renderView($data, ["lpk/sentimen_isu"]);
+    }
+
+    public function senaraiPelapor(){
+        $sesi = $this->sesi();
+        $data["pengguna"] = $this->pengguna();
+        $data = array_merge($data, $this->template($sesi));
+        $this->load->model('sentimen_model');
+        switch($sesi){
+            case 'NEGERI' :
+                $this->load->model('negeri_model');
+                $senaraiNegeri = $this->negeri_model->senaraiTugasanNegeri($data['pengguna']->pengguna_peranan_bil);
+                $data['senarai_pelapor'] = $this->sentimen_model->senaraiPelaporNegeri($senaraiNegeri);
+                $this->renderView($data, ['lpk/senarai_pelapor']);
+                break;
+        }
+    }
+
     public function index()
     {
         $sesi = strtoupper($this->session->userdata('peranan'));
@@ -654,7 +1056,30 @@ class Sentimen extends CI_Controller
                 $this->load->view('us_lapis_na/sentimen/utama', $data);
                 break;
             case 'NEGERI' :
-                $this->load->view('negeri_na/sentimen/utama', $data);
+                $this->load->model('negeri_model');
+                $data = array_merge($data, $this->template($sesi));
+                $senaraiNegeri = $this->negeri_model->senaraiTugasanNegeri($data['pengguna']->pengguna_peranan_bil);
+                // 1. DATA KAD INFO (KPI)
+                $data['statistik'] = $this->sentimen_model->dapatkan_statistik_kad_info_negeri($senaraiNegeri);
+
+                // 2. DATA UNTUK JADUAL ISU
+                $data['senarai_isu'] = $this->sentimen_model->dapatkan_semua_isu_dengan_rumusan();
+
+                // 3. DATA CARTA BAR (TOP 5 ISU)
+                // Dapatkan data raw
+                $top_isu_raw = $this->sentimen_model->dapatkan_top_isu_sentimen(5);
+                
+                // Formatkan kepada JSON untuk dibaca oleh JavaScript
+                $data['carta_isu_label']   = json_encode(array_column($top_isu_raw, 'sit_isu'));
+                $data['carta_isu_positif'] = json_encode(array_column($top_isu_raw, 'positif'));
+                $data['carta_isu_neutral'] = json_encode(array_column($top_isu_raw, 'neutral'));
+                $data['carta_isu_negatif'] = json_encode(array_column($top_isu_raw, 'negatif'));
+
+                // 4. DATA CARTA DONUT (TABURAN SENTIMEN KESELURUHAN)
+                $taburan_raw = $this->sentimen_model->dapatkan_taburan_sentimen_keseluruhan();
+                $data['donut_label'] = json_encode(array_column($taburan_raw, 'label'));
+                $data['donut_data']  = json_encode(array_column($taburan_raw, 'jumlah'));
+                $this->renderView($data, ['lpk/dashboard']);
                 break;
             case 'PPD' :
                 $this->load->model('sentimen_model');

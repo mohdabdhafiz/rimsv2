@@ -131,7 +131,7 @@ class Ppn extends CI_Controller
         }
     }
 
-    public function index(){
+    public function index2(){
         $sesi = strtoupper($this->session->userdata('peranan'));
         $penggunaBil = $this->session->userdata('pengguna_bil');
         $this->load->model('pengguna_model');
@@ -145,6 +145,10 @@ class Ppn extends CI_Controller
             default :
                 redirect(base_url());
         }
+    }
+
+    public function index(){
+        echo "google-site-verification: googlefb733381e7836b12.html"; // Replace with your file content
     }
 
 }

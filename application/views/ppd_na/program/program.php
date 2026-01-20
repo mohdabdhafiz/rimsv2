@@ -1839,7 +1839,18 @@ $this->load->view('ppd_na/susunletak/navbar');
 
     <?php
     function isImage($url) {
-    $headers = get_headers($url, 1);
+    // Tambah context SSL bypass
+    $context = stream_context_create([
+        "ssl" => [
+            "verify_peer" => false,
+            "verify_peer_name" => false,
+        ],
+    ]);
+
+    // Gunakan context dalam get_headers
+    $headers = @get_headers($url, 1, $context); 
+
+
     if (isset($headers['Content-Type'])) {
         $contentType = $headers['Content-Type'];
         if (strpos($contentType, 'image/') === 0) {
@@ -1858,7 +1869,24 @@ $this->load->view('ppd_na/susunletak/navbar');
           //2.1 IF EXISTS
           if(file_exists($filePointers)){
             $url = base_url('assets/img/gambarProgram/').$gambar->gambar_program_nama_fail;
-            $headers = get_headers($url, 1);
+            // Tambah context SSL bypass
+            $context = stream_context_create([
+                "ssl" => [
+                    "verify_peer" => false,
+                    "verify_peer_name" => false,
+                ],
+            ]);
+
+            // Gunakan context dalam get_headers
+            $headers = @get_headers($url, 1, $context); 
+
+            // Semak jika $headers tidak false sebelum akses array
+            if ($headers && strpos($headers[0], '200') !== false) {
+                // Kod anda di baris 1865 & 1868 yang asal di sini
+                // Contoh: echo $headers['Content-Type'];
+            } else {
+                echo "Gambar tidak ditemui atau ralat server.";
+            }
         ?>
       <div class="col-12 col-lg-4">
         <div class="text-center">
@@ -1940,7 +1968,18 @@ $this->load->view('ppd_na/susunletak/navbar');
                             $filePointers = './assets/img/gambarProgram/'.$g->gambar_program_nama_fail;
                             if(file_exists($filePointers)): 
                             $url2 = base_url('assets/img/gambarProgram/').$g->gambar_program_nama_fail; 
-                            $h2 = get_headers($url2, 1); ?>
+                            // Tambah context SSL bypass
+$context = stream_context_create([
+    "ssl" => [
+        "verify_peer" => false,
+        "verify_peer_name" => false,
+    ],
+]);
+
+// Gunakan context dalam get_headers
+$h2 = @get_headers($url2, 1, $context); 
+
+                            ?>
                             <?php if(strpos($h2['Content-Type'], 'image/') !== FALSE): ?>
                             <img src="<?= base_url('assets/img/gambarProgram/').$g->gambar_program_nama_fail ?>" alt="<?= $g->gambar_program_nama_fail ?>" class="img-fluid" style="object-fit: cover; width: auto; height: 100px; border-radius: 5%;">
                             <?php endif; ?>
@@ -2152,7 +2191,17 @@ $this->load->view('ppd_na/susunletak/navbar');
           //2.1 IF EXISTS
           if(file_exists($filePointers)){
             $url = base_url('assets/img/keratanAkhbarProgram/').$keratanAkhbar->keratan_akhbar_program_nama_fail;
-            $headers = get_headers($url, 1);
+            // Tambah context SSL bypass
+$context = stream_context_create([
+    "ssl" => [
+        "verify_peer" => false,
+        "verify_peer_name" => false,
+    ],
+]);
+
+// Gunakan context dalam get_headers
+$headers = @get_headers($url, 1, $context);
+            
         ?>
       <div class="col-12 col-lg-4">
         <div class="text-center">
@@ -2234,7 +2283,17 @@ $this->load->view('ppd_na/susunletak/navbar');
                             $filePointers = './assets/img/keratanAkhbarProgram/'.$g->keratan_akhbar_program_nama_fail;
                             if(file_exists($filePointers)): 
                             $url2 = base_url('assets/img/keratanAkhbarProgram/').$g->keratan_akhbar_program_nama_fail; 
-                            $h2 = get_headers($url2, 1); ?>
+                            // Tambah context SSL bypass
+$context = stream_context_create([
+    "ssl" => [
+        "verify_peer" => false,
+        "verify_peer_name" => false,
+    ],
+]);
+
+// Gunakan context dalam get_headers
+$h2 = @get_headers($url2, 1, $context);
+                            ?>
                             <?php if(strpos($h2['Content-Type'], 'image/') !== FALSE): ?>
                             <img src="<?= base_url('assets/img/keratanAkhbarProgram/').$g->keratan_akhbar_program_nama_fail ?>" alt="<?= $g->keratan_akhbar_program_nama_fail ?>" class="img-fluid" style="object-fit: cover; width: auto; height: 100px; border-radius: 5%;">
                             <?php endif; ?>

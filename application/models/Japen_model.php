@@ -6,62 +6,6 @@ class Japen_model extends CI_Model {
     protected $table = 'japen_tb';
     protected $organisasi = 'organisasi';
 
-    /**
-     * Mendapatkan rumusan N organisasi teratas berdasarkan jumlah pelapor PPD.
-     * @param int $limit Bilangan organisasi untuk dipaparkan.
-     * @return array
-     */
-    public function rumusan_pelapor_ppd_teratas($limit = 5)
-    {
-        $this->db->select([
-            'UPPER(japen_tb.jt_pejabat) AS nama_organisasi',
-            'COUNT(pengguna_tb.bil) AS total_pelapor'
-        ]);
-
-        $this->db->from('japen_tb');
-        $this->db->join('organisasi', 'organisasi.o_japen = japen_tb.jt_bil', 'left');
-        $this->db->join('peranan_tb', 'peranan_tb.peranan_bil = organisasi.o_peranan', 'left');
-        $this->db->join('pengguna_tb', 'pengguna_tb.pengguna_peranan_bil = peranan_tb.peranan_bil', 'left');
-
-        $this->db->like('peranan_tb.peranan_nama', 'PPD', 'after');
-        $this->db->where('pengguna_tb.bil IS NOT NULL'); // Pastikan hanya yang ada pengguna dikira
-
-        $this->db->group_by('japen_tb.jt_pejabat');
-        $this->db->order_by('total_pelapor', 'DESC');
-        $this->db->limit($limit);
-
-        $query = $this->db->get();
-        return $query->result();
-    }
-
-    /**
-     * Mendapatkan rumusan bilangan pelapor (pengguna) untuk setiap peranan PPD,
-     * dikumpulkan mengikut organisasi JAPEN.
-     * @return array
-     */
-    public function rumusan_pelapor_ppd()
-    {
-        $this->db->select([
-            'UPPER(japen_tb.jt_pejabat) AS nama_organisasi',
-            'peranan_tb.peranan_nama AS nama_peranan',
-            'COUNT(pengguna_tb.bil) AS bilangan_pelapor'
-        ]);
-
-        $this->db->from('japen_tb');
-        $this->db->join('organisasi', 'organisasi.o_japen = japen_tb.jt_bil', 'left');
-        $this->db->join('peranan_tb', 'peranan_tb.peranan_bil = organisasi.o_peranan', 'left');
-        $this->db->join('pengguna_tb', 'pengguna_tb.pengguna_peranan_bil = peranan_tb.peranan_bil', 'left');
-
-        // Saring hanya untuk peranan yang mempunyai 'PPD'
-        $this->db->like('peranan_tb.peranan_nama', 'PPD', 'after');
-
-        $this->db->group_by('japen_tb.jt_pejabat, peranan_tb.peranan_nama');
-        $this->db->order_by('nama_organisasi', 'ASC');
-
-        $query = $this->db->get();
-        return $query->result();
-    }
-
     public function padamOrganisasi($organisasiBil){
         $this->db->where('o_bil', $organisasiBil);
         return $this->db->delete($this->organisasi);

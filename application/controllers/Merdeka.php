@@ -1,18 +1,59 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-// Force PHP to display errors.
-error_reporting(E_ALL);
+// **PEMBETULAN DI SINI:** Abaikan amaran 'deprecated' dari pustaka lama
+error_reporting(E_ALL & ~E_DEPRECATED);
 ini_set('display_errors', 1);
 
 class Merdeka extends CI_Controller {
 
-    private $sheet_url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTC7fA6VypmWGqjMGuT4zzrPa_0GNcdLtj-sV9o0d14IPRzOEjP7G03P3ma-jRwM8pZ2yw1Y3Ih7wuP/pub?gid=1384752118&single=true&output=csv';
+    private $sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTC7fA6VypmWGqjMGuT4zzrPa_0GNcdLtj-sV9o0d14IPRzOEjP7G03P3ma-jRwM8pZ2yw1Y3Ih7wuP/pub?output=csv";
     
     //try
     //private $sheet_url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTTVMtv8epe6ZaHytp395SDe3P1zdQbp1DXTkBK2L7Tv_x_0NQLCQNgyrsb0hkNRxYwGEzS6yFV5h3y/pub?gid=1384752118&single=true&output=csv';
     private $unique_column_name = 'NRIC/Passport Number';
     private $sijil_pin = '2025';
+
+    public function hantar_sijil_tertunggak() {
+    if (!$this->session->userdata('sijil_access_granted')) {
+        redirect('merdeka/sijil');
+    }
+
+    $this->load->library('email');
+    $unsent_list = $this->peserta_fun_run_model->get_unsent_certificate_recipients();
+
+    $sent_count = 0;
+    $fail_count = 0;
+
+    if (!empty($unsent_list)) {
+        foreach ($unsent_list as $peserta) {
+            $serial_no = 'MFR2025-' . str_pad($peserta['id'], 5, '0', STR_PAD_LEFT);
+            $pdf_path = $this->_generate_certificate_pdf($peserta['full_name'], $peserta['unique_id'], $serial_no);
+
+            $email_message = $this->_template_email_sijil($peserta['full_name']);
+
+            $this->email->clear(TRUE);
+            $this->email->from('donotreply@inform.gov.my', 'Urus Setia Penganjur Merdeka Fun Run 2025');
+            $this->email->to($peserta['email']);
+            $this->email->subject('Sijil Penyertaan Merdeka 6.8 KM Fun Run & Walk 2025');
+            $this->email->message($email_message);
+            $this->email->attach($pdf_path);
+
+            if ($this->email->send()) {
+                $this->peserta_fun_run_model->mark_certificate_sent($peserta['unique_id']);
+                $sent_count++;
+            } else {
+                $fail_count++;
+            }
+            unlink($pdf_path);
+        }
+    }
+
+    $message = "Proses selesai. " . $sent_count . " sijil tertunggak telah berjaya dihantar. " . $fail_count . " e-mel gagal dihantar.";
+    $this->session->set_flashdata('result', array('status' => 'success', 'message' => $message));
+    redirect('merdeka/senarai_sijil');
+}
+
 
     // **FUNGSI BAHARU UNTUK TEMPLAT E-MEL**
     private function _template_email_sijil($nama_peserta) {
@@ -54,6 +95,78 @@ class Merdeka extends CI_Controller {
         </html>
 EOD;
         return $html;
+    }
+
+    // Memaparkan halaman muat naik fail
+    public function muat_naik() {
+        if (!$this->session->userdata('sijil_access_granted')) {
+            redirect('merdeka/sijil');
+        }
+        $this->load->view('merdeka2025/upload_view');
+    }
+
+    public function proses_muat_naik() {
+        if (!$this->session->userdata('sijil_access_granted')) {
+            redirect('merdeka/sijil');
+        }
+
+        $upload_path = FCPATH . 'uploads/';
+        
+        if (!is_dir($upload_path)) {
+            mkdir($upload_path, 0755, TRUE);
+        }
+        
+        $config['upload_path']   = $upload_path;
+        $config['allowed_types'] = 'xlsx|xls|csv';
+        $config['max_size']      = 2048; // 2MB
+
+        // **PEMBETULAN DI SINI:** Muatkan pustaka dahulu, kemudian baru initialize.
+        $this->load->library('upload');
+        $this->upload->initialize($config);
+
+        if (!$this->upload->do_upload('participant_file')) {
+            $error = array('error' => $this->upload->display_errors());
+            $this->session->set_flashdata('result', ['status' => 'error', 'message' => strip_tags($error['error'])]);
+        } else {
+            $file_data = $this->upload->data();
+            $file_path = $file_data['full_path'];
+
+            require_once APPPATH . 'third_party/PHPExcel/PHPExcel.php';
+
+            try {
+                $objPHPExcel = PHPExcel_IOFactory::load($file_path);
+            } catch(Exception $e) {
+                die('Ralat memuatkan fail: ' . $e->getMessage());
+            }
+
+            $sheet = $objPHPExcel->getSheet(0);
+            $highestRow = $sheet->getHighestRow();
+            $participants_to_import = array();
+
+            for ($row = 2; $row <= $highestRow; $row++){ 
+                $participant_data = array(
+                    'unique_id'  => $sheet->getCell('A'.$row)->getValue(),
+                    'full_name'  => $sheet->getCell('B'.$row)->getValue(),
+                    'email'      => $sheet->getCell('C'.$row)->getValue(),
+                    'shirt_size' => $sheet->getCell('D'.$row)->getValue()
+                );
+
+                if (!empty($participant_data['unique_id']) && !empty($participant_data['full_name'])) {
+                    $participants_to_import[] = $participant_data;
+                }
+            }
+
+            if (!empty($participants_to_import)) {
+                $report = $this->peserta_fun_run_model->import_participants($participants_to_import);
+                $message = 'Import selesai. ' . $report['imported'] . ' peserta baharu ditambah. ' . $report['skipped'] . ' peserta sedia ada dilangkau.';
+                $this->session->set_flashdata('result', ['status' => 'success', 'message' => $message]);
+            } else {
+                $this->session->set_flashdata('result', ['status' => 'warning', 'message' => 'Tiada data peserta baharu ditemui dalam fail.']);
+            }
+            
+            unlink($file_path);
+        }
+        redirect('merdeka/sijil');
     }
 
         public function hantar_semula_sijil($unique_id = '') {
@@ -98,27 +211,9 @@ EOD;
         // 1. Dapatkan senarai yang SUDAH terima sijil dari DB
         $data['recipients'] = $this->peserta_fun_run_model->get_certificate_recipients();
 
-        // 2. Dapatkan SEMUA peserta dari Google Sheet
-        $sheet_participants = $this->_get_sheet_data();
+        // Dapatkan senarai yang BELUM terima sijil dari DB
+        $data['non_recipients'] = $this->peserta_fun_run_model->get_unsent_certificate_recipients();
 
-        // 3. Cipta senarai ID yang sudah terima untuk perbandingan mudah
-        $recipient_ids = array();
-        foreach ($data['recipients'] as $recipient) {
-            $recipient_ids[] = $recipient['unique_id'];
-        }
-
-        // 4. Tapis untuk dapatkan senarai yang BELUM terima sijil
-        $non_recipients = array();
-        if ($sheet_participants) {
-            foreach ($sheet_participants as $sheet_p) {
-                $details = $this->_get_participant_details_from_row($sheet_p);
-                // Jika peserta ada ID unik dan e-mel, dan ID itu TIADA dalam senarai penerima, tambah ke senarai 'belum terima'
-                if (!empty($details['unique_id']) && !empty($details['email']) && !in_array($details['unique_id'], $recipient_ids)) {
-                    $non_recipients[] = $details;
-                }
-            }
-        }
-        $data['non_recipients'] = $non_recipients;
 
         $this->load->view('merdeka2025/senarai_sijil_view', $data);
     }

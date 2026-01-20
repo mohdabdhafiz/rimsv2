@@ -514,7 +514,15 @@ $senarai_pru_dun = array();
             </div>
             <?php } ?>
 
-            
+            <div class="col-12 col-lg-6">
+                <p><strong>Laporan Aktiviti Kempen Parti</strong></p>
+                Mengemaskini maklumat aktiviti kempen calon. <br />
+                <div class="row g-3">
+                    <div class="col-12 col-lg-6">
+                        <a href="<?= site_url('kempen') ?>" class="btn btn-secondary w-100 mt-1">Laporan Aktiviti Kempen Calon</a>
+                    </div>
+                </div>
+            </div>
 
             
             

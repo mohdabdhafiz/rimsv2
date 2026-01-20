@@ -82,6 +82,47 @@ class Pencalonan extends CI_Controller {
         } 
     }
 
+    public function muatTurunPencalonan($pilihanraya_bil)
+    {
+        //INITIALIZATION
+        $sesi = strtoupper($this->session->userdata('peranan'));
+        $perananBil = $this->session->userdata('peranan_bil');
+        $penggunaBil = $this->session->userdata('pengguna_bil');
+        $this->load->model('pengguna_model');
+        $data['pengguna'] = $this->pengguna_model->pengguna($penggunaBil);
+
+        //DOWNLOAD CSV
+        $this->load->model('pilihanraya_model');
+        $this->load->model('pencalonan_model');
+        $this->load->model('pencalonan_parlimen_model');
+        $data['pru'] = $this->pilihanraya_model->pilihanraya($pilihanraya_bil);
+        
+        $filename = 'pencalonan_' . $pilihanraya_bil . '_' . date('Y-m-d') . '.csv';
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        
+        $output = fopen('php://output', 'w');
+        
+        if($data['pru']->pilihanraya_jenis == "PARLIMEN"){
+            $data['senaraiPencalonan'] = $this->pencalonan_parlimen_model->senaraiCalonPilihanraya($pilihanraya_bil);
+            fputcsv($output, array('Bil', 'Parlimen', 'Nama Calon', 'Parti', 'Umur', 'Jantina'));
+            foreach($data['senaraiPencalonan'] as $row) {
+            fputcsv($output, array($row->pencalonan_parlimen_bil, $row->pt_nama, $row->ahli_nama, $row->parti_nama, $row->ahli_umur, $row->ahli_jantina));
+            }
+        }
+        if($data['pru']->pilihanraya_jenis == "DUN"){
+            $data['senaraiPencalonan'] = $this->pencalonan_model->senaraiCalonPilihanraya($pilihanraya_bil);
+            fputcsv($output, array('Bil', 'DUN', 'Nama Calon', 'Parti', 'Umur', 'Jantina'));
+            foreach($data['senaraiPencalonan'] as $row) {
+            fputcsv($output, array($row->pencalonan_bil, $row->dun_nama, $row->ahli_nama, $row->parti_nama, $row->ahli_umur, $row->ahli_jantina));
+            }
+        }
+        
+        fclose($output);
+
+
+    }
+
     public function index()
     {
         //INITIALIZATION

@@ -8,6 +8,86 @@ class Pdm_model extends CI_Model
     // FUNGSI BARU DITAMBAH DI SINI
     //======================================================================
 
+    public function pdmDunByPru($senaraiDun){
+        $this->db->select('pdm_dun_tb.pdt_bil AS dmBil, pdm_dun_tb.pdt_nama AS dmNama, dun_tb.dun_nama AS kawasanNama');
+        $this->db->join('dun_tb', 'dun_tb.dun_bil = pdm_dun_tb.pdt_dun', 'left');
+        $this->db->group_start();
+        foreach($senaraiDun as $dun){
+            $this->db->or_where('pdm_dun_tb.pdt_dun', $dun->dun_bil);
+        }
+        $this->db->group_end();
+        $this->db->order_by('pdm_dun_tb.pdt_nama', 'ASC');
+        $query = $this->db->get($this->pdm_dun);
+        return $query->result();
+    }       
+
+    public function pdmParlimenByPru($senaraiParlimen){
+        $this->db->select('pdm_parlimen_tb.ppt_bil AS dmBil, pdm_parlimen_tb.ppt_nama AS dmNama, parlimen_tb.pt_nama AS kawasanNama');
+        $this->db->join('parlimen_tb', 'parlimen_tb.pt_bil = pdm_parlimen_tb.ppt_parlimen_bil', 'left');
+        $this->db->group_start();
+        foreach($senaraiParlimen as $parlimen){
+            $this->db->or_where('pdm_parlimen_tb.ppt_parlimen_bil', $parlimen->pt_bil);
+        }
+        $this->db->group_end();
+        $this->db->order_by('pdm_parlimen_tb.ppt_nama', 'ASC');
+        $query = $this->db->get($this->pdm_parlimen);
+        return $query->result();
+    }
+
+    public function pdmDunNegeri($senaraiNegeri){
+        $this->db->select('pdm_dun_tb.pdt_bil AS dmBil, pdm_dun_tb.pdt_nama AS dmNama, dun_tb.dun_nama AS dunNama');
+        $this->db->join('dun_tb', 'dun_tb.dun_bil = pdm_dun_tb.pdt_dun', 'left');
+        $this->db->join('tugas_dun_tb', 'tugas_dun_tb.tdt_dun_bil = pdm_dun_tb.pdt_dun', 'left');
+        $this->db->group_start();
+        foreach($senaraiNegeri as $negeri){
+            $this->db->or_where('UPPER(dun_tb.dun_negeri)', strtoupper($negeri->nt_nama));
+        }
+        $this->db->group_end();
+        $this->db->order_by('pdm_dun_tb.pdt_nama', 'ASC');
+        $query = $this->db->get($this->pdm_dun);
+        return $query->result();
+    }
+
+    public function pdmDunPPD($perananBil){
+        $this->db->select('pdm_dun_tb.pdt_bil AS dmBil, pdm_dun_tb.pdt_nama AS dmNama, dun_tb.dun_nama AS dunNama');
+        $this->db->join('dun_tb', 'dun_tb.dun_bil = pdm_dun_tb.pdt_dun', 'left');
+        $this->db->join('tugas_dun_tb', 'tugas_dun_tb.tdt_dun_bil = pdm_dun_tb.pdt_dun', 'left');
+        $this->db->where('tugas_dun_tb.tdt_peranan_bil', $perananBil);
+        $this->db->order_by('pdm_dun_tb.pdt_nama', 'ASC');
+        $query = $this->db->get($this->pdm_dun);
+        return $query->result();
+    }
+
+    /**
+     * Mendapatkan satu baris data PDM Parlimen berdasarkan ID (bil) beserta nama Parlimen.
+     *
+     * @param int $bil ID PDM Parlimen (ppt_bil).
+     * @return object Data PDM beserta nama Parlimen.
+     */
+    public function pdmParlimen($bil)
+    {
+        $this->db->select('ppt_bil AS pdmBil, ppt_nama AS pdmNama, parlimen_tb.pt_nama AS kawasanNama');
+        $this->db->join('parlimen_tb', 'parlimen_tb.pt_bil = pdm_parlimen_tb.ppt_parlimen_bil', 'left');
+        $this->db->where('ppt_bil', $bil);
+        $query = $this->db->get($this->pdm_parlimen);
+        return $query->row();
+    }
+
+    /**
+     * Mendapatkan satu baris data PDM DUN berdasarkan ID (bil) beserta nama DUN.
+     *
+     * @param int $bil ID PDM (pdt_bil).
+     * @return object Data PDM beserta nama DUN.
+     */
+    public function pdmDun($bil)
+    {
+        $this->db->select('pdt_bil AS pdmBil, pdt_nama AS pdmNama, dun_tb.dun_nama AS kawasanNama');
+        $this->db->join('dun_tb', 'dun_tb.dun_bil = pdm_dun_tb.pdt_dun', 'left');
+        $this->db->where('pdt_bil', $bil);
+        $query = $this->db->get($this->pdm_dun);
+        return $query->row();
+    }
+
     /**
      * Mendapatkan satu baris data PDM DUN berdasarkan ID (bil).
      *
@@ -194,5 +274,27 @@ class Pdm_model extends CI_Model
         $query = $this->db->get($this->pdm_dun);
         return $query->row();
     }
+
+    public function semuaPdmDun(){
+        $column = [
+            'pdt_bil AS dmBil',
+            'pdt_nama AS dmNama'
+        ];
+        $this->db->select($column);
+        $this->db->order_by('pdt_nama', 'ASC');
+        $query = $this->db->get($this->pdm_dun);
+        return $query->result();
+    }
+
+    public function semuaPdmParlimen(){
+         $column = [
+            'ppt_bil AS dmBil',
+            'ppt_nama AS dmNama'
+        ];
+        $this->db->select($column);
+        $this->db->order_by('ppt_nama', 'ASC');
+        $query = $this->db->get($this->pdm_parlimen);
+        return $query->result();
+    }   
 }
 ?>

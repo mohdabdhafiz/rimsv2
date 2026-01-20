@@ -123,8 +123,8 @@ $this->load->view('ppd_na/susunletak/navbar');
             <textarea name="input_ringkasan_isu" id="input_ringkasan_isu" cols="5" rows="5" class="form-control"><?= set_value('input_ringkasan_isu') ?></textarea>
         </div>
         <div class="mb-3">
-            <label for="input_lokasi_isu" class="form-label"><?= $bilangan++ ?>) Lokasi Isu:</label>
-            <input type="text" name="input_lokasi_isu" id="input_lokasi_isu" class="form-control" value="<?= set_value('input_lokasi_isu') ?>">
+            <label for="input_lokasi" class="form-label"><?= $bilangan++ ?>) Lokasi Isu:</label>
+            <input type="text" name="input_lokasi" id="input_lokasi" class="form-control" value="<?= set_value('input_lokasi') ?>">
             <div class="row g-3 mt-1">
                 <div class="col-12 col-lg-6 col-md-6 col-sm-12">
                     <div class="form-floating">

@@ -518,22 +518,6 @@ class Kelabmalaysiaku extends CI_Controller {
                 $data['rumusanKaumAhli'] = $this->kelabmalaysiaku_ahli_model->rumusanKaumAhli();
                 $this->load->view('us_program_na/kelabmalaysiaku/laman', $data);
                 break;
-            case 'URUSETIA' :
-                // Panggil data rumusan untuk papan pemuka
-                $data['am'] = $this->kelabmalaysiaku_model->amUmum(); // kiraan kelab, sekolah, ahli
-                $data['senaraiRumusan'] = $this->kelabmalaysiaku_model->senaraiRumusanUmum(); // pecahan ikut negeri
-                
-                // PANGGIL FUNGSI BAHARU untuk mendapatkan data mengikut daerah
-                $data['rumusanDaerah'] = $this->kelabmalaysiaku_model->senaraiRumusanDaerah(10); // Ambil 10 daerah teratas
-
-                // TAMBAHAN: Panggil data untuk 5 negeri teratas
-                $data['negeriTeratas'] = $this->kelabmalaysiaku_model->senaraiRumusanUmum(5); // Menggunakan semula fungsi sedia ada dengan had 5
-
-                // Muatkan paparan papan pemuka yang baharu
-                $this->load->view('susunletak/atas', $data);
-                $this->load->view('urusetia_na/kelabmalaysiaku/dashboard'); // Fail view baharu yang akan kita cipta
-                $this->load->view('susunletak/bawah');
-                break;
             default :
                 redirect(base_url());
         }

@@ -4,6 +4,52 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Peserta_fun_run_model extends CI_Model {
 
     /**
+     * Mendapatkan senarai semua peserta yang belum menerima sijil.
+     * @return array
+     */
+    public function get_unsent_certificate_recipients() {
+        $this->db->where('certificate_sent_at IS NULL');
+        $this->db->where('email IS NOT NULL');
+        $this->db->where("email != ''");
+        $this->db->order_by('id', 'ASC');
+        $query = $this->db->get('participants');
+        return $query->result_array();
+    }
+
+    /**
+     * Mengimport senarai peserta dari fail Excel/CSV.
+     * Ia akan menyemak duplikasi dan hanya memasukkan rekod baharu.
+     * @param array $participants Data peserta untuk diimport.
+     * @return array Laporan import [imported_count, skipped_count].
+     */
+    public function import_participants($participants) {
+        $imported_count = 0;
+        $skipped_count = 0;
+        $batch_insert_data = array();
+
+        foreach ($participants as $participant) {
+            // Semak jika peserta sudah wujud
+            $this->db->where('unique_id', $participant['unique_id']);
+            $query = $this->db->get('participants');
+
+            if ($query->num_rows() == 0) {
+                // Peserta baharu, tambah ke senarai untuk dimasukkan
+                $batch_insert_data[] = $participant;
+                $imported_count++;
+            } else {
+                $skipped_count++;
+            }
+        }
+
+        // Masukkan semua rekod baharu sekali gus untuk kecekapan
+        if (!empty($batch_insert_data)) {
+            $this->db->insert_batch('participants', $batch_insert_data);
+        }
+
+        return ['imported' => $imported_count, 'skipped' => $skipped_count];
+    }
+    
+    /**
      * Mendapatkan senarai semua peserta yang telah menerima sijil.
      * @return array
      */

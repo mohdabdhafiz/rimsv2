@@ -108,6 +108,7 @@ $this->load->view('ppd_na/susunletak/navbar');
                 <input class="form-check-input" type="radio" name="input_tajuk_isu" id="input_tajuk_isu_lain_radio" value="Lain-lain">
                 <label class="form-check-label" for="input_tajuk_isu_lain_radio">
                     Lain-lain
+                    
                 </label>
                 <textarea name="input_tajuk_isu_lain" id="input_tajuk_isu_lain_text" cols="10" rows="5" class="form-control"></textarea>
             </div>

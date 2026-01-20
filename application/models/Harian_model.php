@@ -6,6 +6,34 @@ class Harian_model extends CI_Model {
     protected $table = 'harian_tb';
     protected $dm_harian = 'harian_dm_dun_tb';
 
+    public function senaraiGradingPenuh($pru){
+        $columns = [
+            'dun_tb.dun_nama AS kerusiNama',
+            'dun_tb.dun_bil AS kerusiBil'
+        ];
+        $this->db->select($columns);
+        
+        // Validate dates before using them
+        $startDate = DateTime::createFromFormat('Y-m-d', $pru->pilihanraya_penamaan_calon);
+        $endDate = DateTime::createFromFormat('Y-m-d', $pru->pilihanraya_lock_status);
+        
+        if($startDate && $endDate && $startDate <= $endDate){
+            for($i = $pru->pilihanraya_penamaan_calon; $i <= $pru->pilihanraya_lock_status; $i = date("Y-m-d", strtotime("+1 day", strtotime($i)))){
+                $dateAlias = str_replace('-', '_', $i);
+                $this->db->select("MAX(CASE WHEN harian_tb.harian_tarikh = '{$i}' THEN harian_tb.harian_grading END) AS `grading_{$dateAlias}`", FALSE);
+            }
+        }
+        
+        $this->db->join("dun_tb", "dun_tb.dun_bil = pilihanraya_dun_tb.pdt_dun_bil", "left");
+        $this->db->join("harian_tb", "harian_tb.harian_dun = dun_tb.dun_bil AND harian_tb.harian_pilihanraya = pilihanraya_dun_tb.pdt_pilihanraya_bil", "left");
+        $this->db->where('pilihanraya_dun_tb.pdt_pilihanraya_bil', $pru->pilihanraya_bil);
+        $this->db->where('harian_tb.harian_tarikh >=', $pru->pilihanraya_penamaan_calon);
+        $this->db->group_by('dun_tb.dun_bil');
+        $this->db->order_by('dun_tb.dun_nama', 'ASC');
+        $query = $this->db->get('pilihanraya_dun_tb');
+        return $query->result();
+    }
+
     private function update20250205(){
         $this->load->dbforge();
         if ($this->db->field_exists('harian_pengguna', $this->table) == FALSE)

@@ -6,6 +6,34 @@ class Harian_parlimen_model extends CI_Model {
     protected $table = 'harian_parlimen_tb';
     protected $dm_harian = 'harian_dm_parlimen_tb';
 
+    public function senaraiGradingPenuh($pru){
+        $columns = [
+            'parlimen_tb.pt_nama AS kerusiNama',
+            'parlimen_tb.pt_bil AS kerusiBil'
+        ];
+        $this->db->select($columns);
+        
+        // Validate dates before using them
+        $startDate = DateTime::createFromFormat('Y-m-d', $pru->pilihanraya_penamaan_calon);
+        $endDate = DateTime::createFromFormat('Y-m-d', $pru->pilihanraya_lock_status);
+        
+        if($startDate && $endDate && $startDate <= $endDate){
+            for($i = $pru->pilihanraya_penamaan_calon; $i <= $pru->pilihanraya_lock_status; $i = date("Y-m-d", strtotime("+1 day", strtotime($i)))){
+                $dateAlias = str_replace('-', '_', $i);
+                $this->db->select("MAX(CASE WHEN harian_parlimen_tb.harian_parlimen_tarikh = '{$i}' THEN harian_parlimen_tb.harian_parlimen_grading END) AS `grading_{$dateAlias}`", FALSE);
+            }
+        }
+        
+        $this->db->join("parlimen_tb", "parlimen_tb.pt_bil = pilihanraya_parlimen_tb.ppt_parlimen_bil", "left");
+        $this->db->join("harian_parlimen_tb", "harian_parlimen_tb.harian_parlimen_parlimen = parlimen_tb.pt_bil AND harian_parlimen_tb.harian_parlimen_pilihanraya = pilihanraya_parlimen_tb.ppt_pilihanraya_bil", "left");
+        $this->db->where('pilihanraya_parlimen_tb.ppt_pilihanraya_bil', $pru->pilihanraya_bil);
+        $this->db->where('harian_parlimen_tb.harian_parlimen_tarikh >=', $pru->pilihanraya_penamaan_calon);
+        $this->db->group_by('parlimen_tb.pt_bil');
+        $this->db->order_by('parlimen_tb.pt_nama', 'ASC');
+        $query = $this->db->get('pilihanraya_parlimen_tb');
+        return $query->result();
+    }
+
     public function kedudukanTerkini($pilihanrayaBil){
         $columns = [
             "UPPER(parlimen_tb.pt_nama) AS kawasanNama",

@@ -54,6 +54,10 @@ $this->load->view('negeri_na/susunletak/navbar');
                             <th>Perkara</th>
                             <th>Ulasan</th>
                             <th>Status</th>
+                            <th scope="col">Isu Positif</th>
+                                        <th scope="col">Isu Neutral</th>
+                                        <th scope="col">Isu Negatif</th>
+                                        <th scope="col">Ulasan Isu</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -78,6 +82,10 @@ $this->load->view('negeri_na/susunletak/navbar');
                             <td><?= $lks->lksPerkara ?></td>
                             <td><?= $lks->lksUlasan ?></td>
                             <td><?= $lks->lksTapisan ?></td>
+                            <td><?= $lks->lksIsuPositif ?></td>
+                                        <td><?= $lks->lksIsuNeutral ?></td>
+                                        <td><?= $lks->lksIsuNegatif ?></td>
+                                        <td><?= $lks->lksIsuAlasan ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>

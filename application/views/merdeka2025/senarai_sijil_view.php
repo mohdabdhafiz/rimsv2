@@ -62,7 +62,14 @@
 
             <!-- JADUAL 2: BELUM TERIMA SIJIL -->
             <div class="bg-white p-6 rounded-xl shadow-md">
-                <h2 class="text-xl font-bold mb-4 text-yellow-700">Senarai Menunggu Penghantaran Sijil</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-yellow-700">Senarai Menunggu Penghantaran Sijil</h2>
+                    <?php if (!empty($non_recipients)): ?>
+                    <a href="<?php echo site_url('merdeka/hantar_sijil_tertunggak'); ?>" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">
+                        Hantar Semua Sijil Tertunggak (<?php echo count($non_recipients); ?>)
+                    </a>
+                    <?php endif; ?>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">

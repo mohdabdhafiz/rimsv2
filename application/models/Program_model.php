@@ -928,11 +928,16 @@ class Program_model extends CI_Model {
         return $query->result();
     }
 
-    public function senaraiStatusIndividu($penggunaBil){
+    public function senaraiStatusIndividu($penggunaBil)
+    {
         $this->db->select('program_status');
         $this->db->select('COUNT(program_status) AS kiraanStatus');
         $this->db->where('program_pelapor', $penggunaBil);
-        $this->db->order_by('program.program_pengguna_waktu', 'DESC');       
+
+        // FIX: Use an aggregate function like MAX() in the ORDER BY clause.
+        // This sorts the groups based on the most recent timestamp within each group.
+        $this->db->order_by('MAX(program.program_pengguna_waktu)', 'DESC');
+
         $this->db->group_by('program_status');
         $query = $this->db->get($this->tableName);
         return $query->result();

@@ -3,19 +3,453 @@ class Sentimen_model extends CI_Model
 {
 
     private $table = 'sentimen_tb';
+    private $tableIsu = "sentimen_isu_tb";
+    private $tableDapatIsu = "sentimen_dapatan_isu_tb";
+
+    
+
+    public function padamMaklumatIsu($isuBil){
+        $this->db->delete($this->tableIsu, ['sit_bil' => $isuBil]);
+    }
 
     /**
-     * Mendapatkan senarai laporan sentimen terkini, termasuk nama pelapor.
-     * @param int $limit Bilangan laporan untuk dipaparkan.
-     * @return array
+     * Fungsi untuk mengemaskini rekod isu di dalam database.
      */
-    public function laporan_terkini($limit = 5)
+    public function update_isu($id, $data) {
+        // ANDAIAN: Primary key anda ialah 'sit_id'
+        $this->db->where('sit_bil', $id);
+        // Kemaskini data dalam $this->tableIsu
+        return $this->db->update($this->tableIsu, $data); 
+    }
+
+    public function padamIsu($sentimenBil){
+        $this->db->delete($this->tableDapatIsu, ['sdi_sentimen_bil' => $sentimenBil]);
+    }   
+
+    /**
+     * FUNGSI UNTUK JADUAL SENARAI ISU
+     * Mendapatkan semua isu dari jadual utama dan mengira jumlah laporan
+     * serta sentimen dominan untuk setiap isu.
+     */
+    public function dapatkan_semua_isu_dengan_rumusan()
     {
-        $this->db->select("sentimen_tb.stPerkara, sentimen_tb.stTarikhLaporan, pengguna_tb.nama_penuh AS penggunaNama");
+        $this->db->select("
+            sit.*,
+            (SELECT COUNT(*) FROM {$this->tableDapatIsu} sdi WHERE sdi.sdi_sentimen_bil = sit.sit_bil) as jumlah_laporan,
+            (SELECT sdi_sentimen FROM {$this->tableDapatIsu} sdi WHERE sdi.sdi_sentimen_bil = sit.sit_bil GROUP BY sdi_sentimen ORDER BY COUNT(sdi_bil) DESC, sdi_sentimen ASC LIMIT 1) as sentimen_dominan
+        ");
+        $this->db->from("{$this->tableIsu} sit");
+        $this->db->order_by('sit.sit_tarikh_dibina', 'DESC');
+        
+        $query = $this->db->get();
+        return $query->result();
+    }
+
+    /**
+     * FUNGSI UNTUK KAD STATISTIK (INFO CARDS) - Versi PHP 5 Compatible
+     * Mengira tiga metrik utama untuk paparan di bahagian atas.
+     */
+    public function dapatkan_statistik_kad_info()
+    {
+        // 1. Dapatkan jumlah isu yang aktif
+        $this->db->where('sit_aktif', 'YA');
+        $this->db->from($this->tableIsu);
+        $jumlah_aktif = $this->db->count_all_results();
+
+        // 2. Dapatkan sentimen dominan keseluruhan
+        $this->db->select('sdi_sentimen');
+        $this->db->from($this->tableDapatIsu);
+        $this->db->group_by('sdi_sentimen');
+        $this->db->order_by('COUNT(sdi_bil)', 'DESC');
+        $this->db->limit(1);
+        $query_dominan = $this->db->get();
+        
+        // Semakan jika tiada data untuk mengelakkan error pada row()
+        if ($query_dominan->num_rows() > 0) {
+            $dominan_keseluruhan = $query_dominan->row()->sdi_sentimen;
+        } else {
+            $dominan_keseluruhan = null;
+        }
+
+        // 3. Dapatkan isu dengan laporan negatif terbanyak
+        $this->db->select('sdi_isu, COUNT(sdi_bil) as jumlah_negatif');
+        $this->db->from($this->tableDapatIsu);
+        $this->db->where('sdi_sentimen', 'Negatif');
+        
+        // PEMBETULAN PHP 5: Gunakan array() menggantikan []
+        $this->db->group_by(array('sdi_sentimen_bil', 'sdi_isu')); 
+        
+        $this->db->order_by('jumlah_negatif', 'DESC');
+        $this->db->limit(1);
+        $isu_paling_negatif = $this->db->get()->row();
+
+        // Penyediaan Result Object
+        $result = new stdClass();
+        $result->jumlah_isu_aktif = $jumlah_aktif;
+        
+        // Logik ternary (Logic ini disokong dalam PHP 5)
+        $result->dominan_keseluruhan = isset($dominan_keseluruhan) ? $dominan_keseluruhan : 'TIADA DATA';
+        $result->isu_paling_negatif = isset($isu_paling_negatif->sdi_isu) ? $isu_paling_negatif->sdi_isu : 'TIADA DATA';
+        $result->jumlah_paling_negatif = isset($isu_paling_negatif->jumlah_negatif) ? $isu_paling_negatif->jumlah_negatif : 0;
+
+        return $result;
+    }
+
+    public function senaraiPelaporNegeri($senaraiNegeri){
+        $this->db->select([
+            'pengguna_tb.nama_penuh AS nama_pelapor',
+            'pengguna_tb.no_tel AS no_tel_pelapor',
+            'COUNT(sentimen_tb.stBil) AS jumlah_isu',
+            'pengguna_tb.pekerjaan AS jawatan_pelapor',
+            'pengguna_tb.pengguna_tempat_tugas AS penempatan_pelapor'
+        ]);
+        $this->db->from($this->table);
         $this->db->join('pengguna_tb', 'pengguna_tb.bil = sentimen_tb.stPelaporBil', 'left');
-        $this->db->order_by('sentimen_tb.stTarikhLaporan', 'DESC');
+        $this->db->join('daerah', 'daerah.bil = sentimen_tb.stDaerahBil', 'left');
+        $this->db->group_start();
+        foreach($senaraiNegeri as $negeri){
+            $this->db->or_where('daerah.negeri_bil', $negeri->nt_bil);
+        }
+        $this->db->group_end();
+        $this->db->group_by('sentimen_tb.stPelaporBil');
+        $this->db->order_by('jumlah_isu', 'DESC');
+        $query = $this->db->get();
+        return $query->result();
+    }
+
+    public function dapatkan_statistik_kad_info_negeri($senaraiNegeri)
+    {
+        // 2. Dapatkan sentimen dominan keseluruhan
+        $this->db->select('sdi_sentimen');
+        $this->db->from($this->tableDapatIsu);
+        $this->db->group_by('sdi_sentimen');
+        $this->db->order_by('COUNT(sdi_bil)', 'DESC');
+        $this->db->limit(1);
+        $dominan_keseluruhan = $this->db->get()->row('sdi_sentimen');
+
+        // 3. Dapatkan isu dengan laporan negatif terbanyak (BAHAGIAN YANG DIPERBETULKAN)
+        $this->db->select('sdi_isu, COUNT(sdi_bil) as jumlah_negatif');
+        $this->db->from($this->tableDapatIsu);
+        $this->db->where('sdi_sentimen', 'Negatif');
+        
+        // PEMBETULAN: Tambah 'sdi_isu' ke dalam group_by
+        $this->db->group_by(['sdi_sentimen_bil', 'sdi_isu']); 
+        
+        $this->db->order_by('jumlah_negatif', 'DESC');
+        $this->db->limit(1);
+        $isu_paling_negatif = $this->db->get()->row();
+
+        // 4. Dapatkan bilangan pelapor semasa
+        $this->db->select('COUNT(DISTINCT stPelaporBil) AS jumlah_pelapor');
+        $this->db->from($this->table);
+        $this->db->join('daerah', 'daerah.bil = sentimen_tb.stDaerahBil', 'left');
+        $this->db->group_start();
+        foreach($senaraiNegeri as $negeri){
+            $this->db->or_where('daerah.negeri_bil', $negeri->nt_bil);
+        }
+        $this->db->group_end();
+        $jumlah_pelapor = $this->db->get()->row('jumlah_pelapor');
+
+        $result = new stdClass();
+        $result->dominan_keseluruhan = isset($dominan_keseluruhan) ? $dominan_keseluruhan : 'TIADA DATA';
+
+        // Semakan "Nested": Pastikan objek $isu_paling_negatif wujud DAHULU, baru cek property
+        $result->isu_paling_negatif = (isset($isu_paling_negatif) && isset($isu_paling_negatif->sdi_isu)) ? $isu_paling_negatif->sdi_isu : 'TIADA DATA';
+
+        $result->jumlah_paling_negatif = (isset($isu_paling_negatif) && isset($isu_paling_negatif->jumlah_negatif)) ? $isu_paling_negatif->jumlah_negatif : 0;
+
+        $result->jumlah_pelapor = isset($jumlah_pelapor) ? $jumlah_pelapor : 0;
+
+        return $result;
+    }
+
+    public function dapatkan_taburan_sentimen_negeri($senaraiNegeri)
+    {
+        $this->db->select('sdi_sentimen as label, COUNT(sdi_bil) as jumlah');
+        $this->db->from($this->tableDapatIsu);
+        $this->db->group_by('sdi_sentimen');
+        if(!empty($senaraiNegeri)){
+            $this->db->join('sentimen_tb st', 'sdi_sentimen_bil = st.stBil', 'left');
+            $this->db->join('daerah d', 'st.stDaerahBil = d.bil', 'left');
+            $this->db->group_start();
+            foreach ($senaraiNegeri as $negeri) {
+                $this->db->or_where('d.negeri_bil', $negeri->nt_bil);
+            }
+            $this->db->group_end();
+        }
+        $query = $this->db->get();
+        return $query->result();
+    }
+
+    /**
+     * FUNGSI UNTUK CARTA DONUT
+     * Mendapatkan taburan keseluruhan sentimen (Positif, Neutral, Negatif).
+     */
+    public function dapatkan_taburan_sentimen_keseluruhan()
+    {
+        $this->db->select('sdi_sentimen as label, COUNT(sdi_bil) as jumlah');
+        $this->db->from($this->tableDapatIsu);
+        $this->db->group_by('sdi_sentimen');
+        
+        $query = $this->db->get();
+        return $query->result();
+    }
+
+    public function dapatkan_top_isu_sentimen_negeri($limit = 5, $senaraiNegeri)
+    {
+        // 1. SELECT dengan CASE WHEN (Gunakan FALSE untuk elak backticks pada formula)
+        $this->db->select('sit.sit_isu');
+        $this->db->select("SUM(CASE WHEN sdi.sdi_sentimen = 'Positif' THEN 1 ELSE 0 END) as positif", FALSE);
+        $this->db->select("SUM(CASE WHEN sdi.sdi_sentimen = 'Neutral' THEN 1 ELSE 0 END) as neutral", FALSE);
+        $this->db->select("SUM(CASE WHEN sdi.sdi_sentimen = 'Negatif' THEN 1 ELSE 0 END) as negatif", FALSE);
+
+        // 2. FROM & JOIN
+        // Nota: 'sdi', 'sit', 'st', 'd' adalah alias untuk table
+        $this->db->from($this->tableDapatIsu . ' sdi');
+        $this->db->join($this->tableIsu . ' sit', 'sdi.sdi_sentimen_bil = sit.sit_bil');
+        $this->db->join('sentimen_tb st', 'sdi.sdi_sentimen_bil = st.stBil', 'left');
+        $this->db->join('daerah d', 'st.stDaerahBil = d.bil', 'left');
+
+        // 3. FILTER NEGERI (Looping)
+        // Kita letak dalam group (kurungan) supaya logik OR tidak kacau query lain
+        if (!empty($senaraiNegeri)) {
+            $this->db->group_start();
+            foreach ($senaraiNegeri as $negeri) {
+                // Pastikan guna object property atau array key bergantung data anda
+                $id_negeri = isset($negeri->nt_bil) ? $negeri->nt_bil : $negeri; 
+                $this->db->or_where('d.negeri_bil', $id_negeri);
+            }
+            $this->db->group_end();
+        }
+
+        // 4. GROUP BY (Gunakan array() untuk PHP 5)
+        $this->db->group_by(array('sdi.sdi_sentimen_bil', 'sit.sit_isu'));
+
+        // 5. ORDER BY & LIMIT
+        $this->db->order_by('COUNT(sdi.sdi_bil)', 'DESC');
         $this->db->limit($limit);
-        $query = $this->db->get('sentimen_tb');
+
+        // 6. EXECUTE
+        $query = $this->db->get();
+        
+        return $query->result();
+    }
+
+    /**
+     * FUNGSI UNTUK CARTA BAR - Versi PHP 5 Compatible
+     * Mendapatkan pecahan sentimen untuk 5 isu yang mempunyai laporan terbanyak.
+     */
+    public function dapatkan_top_isu_sentimen($limit = 5)
+    {
+        // SQL string kekal sama
+        $sql = "
+            SELECT
+                sit.sit_isu,
+                SUM(CASE WHEN sdi.sdi_sentimen = 'Positif' THEN 1 ELSE 0 END) as positif,
+                SUM(CASE WHEN sdi.sdi_sentimen = 'Neutral' THEN 1 ELSE 0 END) as neutral,
+                SUM(CASE WHEN sdi.sdi_sentimen = 'Negatif' THEN 1 ELSE 0 END) as negatif
+            FROM {$this->tableDapatIsu} sdi
+            JOIN {$this->tableIsu} sit ON sdi.sdi_sentimen_bil = sit.sit_bil
+            GROUP BY sdi.sdi_sentimen_bil, sit.sit_isu
+            ORDER BY COUNT(sdi.sdi_bil) DESC
+            LIMIT ?
+        ";
+        
+        // PEMBETULAN PHP 5:
+        // Tukar [(int) $limit] kepada array((int) $limit)
+        // Kerana PHP versi lama (5.3 ke bawah) tidak menyokong [] untuk array.
+        $query = $this->db->query($sql, array((int) $limit));
+        
+        return $query->result();
+    }
+
+     /**
+     * Fungsi untuk memasukkan rekod isu baharu ke dalam pangkalan data.
+     *
+     * @param array $data Data isu yang telah disahkan dari controller.
+     * @return bool Mengembalikan TRUE jika simpanan berjaya, FALSE jika gagal.
+     */
+    public function tambah_isu_baharu($data)
+    {
+        // Gunakan fungsi insert() dari Query Builder CodeIgniter
+        // Ia akan memasukkan array $data ke dalam jadual $this->tableIsu
+        // dan mengembalikan status kejayaan (TRUE/FALSE)
+        return $this->db->insert($this->tableIsu, $data);
+    }
+
+    private function binaTableDapatIsu(){
+        $this->load->dbforge();
+        if(!$this->db->table_exists($this->tableDapatIsu)){
+            $fields = [
+                'sdi_bil' => array(
+                    'type' => 'INT',
+                    'auto_increment' => TRUE
+                ),
+                'sdi_sentimen_bil' => array(
+                    'type' => 'INT',
+                    'null' => FALSE
+                ),
+                'sdi_isu' => array(
+                    'type' => 'VARCHAR',
+                    'constraint' => '255',
+                    'null' => FALSE
+                ),
+                'sdi_sentimen' => array(
+                    'type' => 'VARCHAR',
+                    'constraint' => '20',
+                    'null' => FALSE
+                ),
+                'sdi_alasan' => array(
+                    'type' => 'TEXT',
+                    'null' => TRUE
+                )
+            ];
+            $this->dbforge->add_field($fields);
+            $this->dbforge->add_key('sdi_bil', TRUE);
+            $this->dbforge->create_table($this->tableDapatIsu, TRUE);
+        }
+    }
+
+    public function update20250910(){
+        $this->binaTableIsu();
+        $this->updateTableSentimen20251009();
+        $this->binaTableDapatIsu();
+    }
+
+    private function updateTableSentimen20251009(){
+        $this->load->dbforge();
+        if(!$this->db->field_exists('stIsuPositif', $this->table)){
+            $fields = [
+                'stIsuPositif' => array(
+                    'type' => 'VARCHAR',
+                    'constraint' => '255',
+                    'null' => TRUE,
+                    'after' => 'stSentimen'
+                )
+            ];
+            $this->dbforge->add_column($this->table, $fields);
+        }
+        if(!$this->db->field_exists('stIsuNegatif', $this->table)){
+            $fields = [
+                'stIsuNegatif' => array(
+                    'type' => 'VARCHAR',
+                    'constraint' => '255',
+                    'null' => TRUE,
+                    'after' => 'stIsuPositif'
+                )
+            ];
+            $this->dbforge->add_column($this->table, $fields);
+        }
+        if(!$this->db->field_exists('stIsuNeutral', $this->table)){
+            $fields = [
+                'stIsuNeutral' => array(
+                    'type' => 'VARCHAR',
+                    'constraint' => '255',
+                    'null' => TRUE,
+                    'after' => 'stIsuNegatif'
+                )
+            ];
+            $this->dbforge->add_column($this->table, $fields);
+        }     
+        if(!$this->db->field_exists('stIsuAlasan', $this->table)){
+            $fields = [
+                'stIsuAlasan' => array(
+                    'type' => 'TEXT',
+                    'null' => TRUE,
+                    'after' => 'stIsuNeutral'
+                )
+            ];
+            $this->dbforge->add_column($this->table, $fields);
+        }    
+        if(!$this->db->field_exists('stIsuAlasan', $this->table)){
+            $fields = [
+                'stIsuAlasan' => array(
+                    'type' => 'TEXT',
+                    'null' => TRUE,
+                    'after' => 'stIsuNeutral'
+                )
+            ];
+            $this->dbforge->add_column($this->table, $fields);
+        }
+
+        if(!$this->db->field_exists('sdi_alasan', $this->tableDapatIsu)){
+            $fields = [
+                'sdi_alasan' => array(
+                    'type' => 'TEXT',
+                    'null' => TRUE,
+                    'after' => 'sdi_sentimen'
+                )
+            ];
+            $this->dbforge->add_column($this->tableDapatIsu, $fields);
+        }
+    }
+
+    private function binaTableIsu(){
+        $this->load->dbforge();
+        if($this->db->table_exists($this->tableIsu)){
+            return;
+        }
+
+        $fields = [
+            'sit_bil' => array(
+                'type' => 'INT',
+                'auto_increment' => TRUE
+            ),
+            'sit_isu' => array(
+                'type' => 'VARCHAR',
+                'constraint' => '255',
+                'null' => FALSE
+            ),
+            'sit_keterangan' => array(
+                'type' => 'TEXT',
+                'null' => TRUE
+            ),
+            'sit_tarikh_dibina' => array(
+                'type' => 'DATETIME',
+                'null' => FALSE
+            ),
+            'sit_pengguna_bil' => array(
+                'type' => 'INT',
+                'null' => TRUE
+            ),
+            'sit_aktif' => array(
+                'type' => 'ENUM',
+                'constraint' => ['YA', 'TIDAK'],
+                'default' => 'YA',
+                'null' => FALSE
+            )
+        ];
+        $this->dbforge->add_field($fields);
+        $this->dbforge->add_key('sit_bil', TRUE);
+        $this->dbforge->create_table($this->tableIsu, TRUE);
+
+    }
+
+    public function isu($isuBil){
+        $this->update20250910();
+        $column = [
+            "sit_bil",
+            "sit_isu",
+            "sit_keterangan",
+            "sit_tarikh_dibina",
+            "sit_pengguna_bil",
+            "sit_aktif",
+            "pengguna_tb.nama_penuh AS pengguna_nama"
+        ];
+        $this->db->select($column);
+        $this->db->join('pengguna_tb', 'pengguna_tb.bil = sentimen_isu_tb.sit_pengguna_bil', 'left');
+        $this->db->where("sit_bil", $isuBil);
+        $query = $this->db->get($this->tableIsu);
+        return $query->row();
+    }
+
+    public function senaraiIsu(){
+        $this->update20250910();
+        $this->db->select("UPPER(sentimen_isu_tb.sit_isu) AS nama");
+        $this->db->select("sentimen_isu_tb.sit_bil AS id");
+        $this->db->where("sentimen_isu_tb.sit_aktif", "YA");
+        $this->db->order_by('sentimen_isu_tb.sit_tarikh_dibina', 'DESC');
+        $query = $this->db->get($this->tableIsu);
         return $query->result();
     }
 
@@ -115,29 +549,34 @@ class Sentimen_model extends CI_Model
     }
 
     public function muatTurunPilihan($filters = [], $senaraiPeranan) {
-        // Define columns to select with aliases
-        $columns = [
-            "sentimen_tb.stBil AS `NOMBOR SIRI`",
-            "sentimen_tb.stPenggunaWaktu AS `LAPORAN DIBINA`",
-            "pengguna_tb.emel AS `E-MEL PELAPOR`",
-            "sentimen_tb.stTarikhLaporan AS `TARIKH LAPORAN`",
-            "UPPER(pengguna_tb.nama_penuh) AS `NAMA PELAPOR`",
-            "pengguna_tb.no_tel AS `NOMBOR TELEFON PELAPOR`",
-            "UPPER(negeri_tb.nt_nama) AS `NEGERI`",
-            "UPPER(daerah.nama) AS `DAERAH`",
-            "UPPER(parlimen_tb.pt_nama) AS `PARLIMEN`",
-            "UPPER(dun_tb.dun_nama) AS `DUN`",
-            "UPPER(sentimen_tb.stKawasan) AS `KAWASAN RESPONDEN`",
-            "UPPER(sentimen_tb.stPekerjaan) AS `PEKERJAAN RESPONDEN`",
-            "UPPER(sentimen_tb.stUmur) AS `KATEGORI UMUR RESPONDEN`",
-            "UPPER(sentimen_tb.stKaum) AS `KAUM RESPONDEN`",
-            "UPPER(sentimen_tb.stJantina) AS `JANTINA RESPONDEN`",
-            "UPPER(sentimen_tb.stSentimen) AS `SENTIMEN`",
-            "sentimen_tb.stAlasan AS `ULASAN SENTIMEN`",
-        ];
-    
-        // Select columns
-        $this->db->select($columns);
+        $senaraiIsu = $this->senaraiIsu();
+        $this->db->select("sentimen_tb.stBil AS `NOMBOR SIRI`");
+        $this->db->select("sentimen_tb.stPenggunaWaktu AS `LAPORAN DIBINA`");
+        $this->db->select("pengguna_tb.emel AS `E-MEL PELAPOR`");
+        $this->db->select("sentimen_tb.stTarikhLaporan AS `TARIKH LAPORAN`");
+        $this->db->select("UPPER(pengguna_tb.nama_penuh) AS `NAMA PELAPOR`");
+        $this->db->select("pengguna_tb.no_tel AS `NOMBOR TELEFON PELAPOR`");
+        $this->db->select("UPPER(negeri_tb.nt_nama) AS `NEGERI`");
+        $this->db->select("UPPER(daerah.nama) AS `DAERAH`");
+        $this->db->select("UPPER(parlimen_tb.pt_nama) AS `PARLIMEN`");
+        $this->db->select("UPPER(dun_tb.dun_nama) AS `DUN`");
+        $this->db->select("UPPER(sentimen_tb.stKawasan) AS `KAWASAN RESPONDEN`");
+        $this->db->select("UPPER(sentimen_tb.stPekerjaan) AS `PEKERJAAN RESPONDEN`");
+        $this->db->select("UPPER(sentimen_tb.stUmur) AS `KATEGORI UMUR RESPONDEN`");
+        $this->db->select("UPPER(sentimen_tb.stKaum) AS `KAUM RESPONDEN`");
+        $this->db->select("UPPER(sentimen_tb.stJantina) AS `JANTINA RESPONDEN`");
+        $this->db->select("UPPER(sentimen_tb.stSentimen) AS `SENTIMEN`");
+        $this->db->select("UPPER(sentimen_tb.stPerkara) AS `PERKARA`");
+        $this->db->select("sentimen_tb.stAlasan AS `ULASAN SENTIMEN`");
+        $this->db->select("UPPER(sentimen_tb.stIsuPositif) AS `SENARAI ISU POSITIF`");
+        $this->db->select("UPPER(sentimen_tb.stIsuNegatif) AS `SENARAI ISU NEGATIF`");
+        $this->db->select("UPPER(sentimen_tb.stIsuNeutral) AS `SENARAI ISU NEUTRAL`");
+        $this->db->select("sentimen_tb.stIsuAlasan AS `ULASAN ISU`");
+        
+        foreach($senaraiIsu as $isu){
+            $this->db->select("(SELECT UPPER(sentimen_dapatan_isu_tb.sdi_sentimen) FROM sentimen_dapatan_isu_tb WHERE sentimen_dapatan_isu_tb.sdi_sentimen_bil = sentimen_tb.stBil AND sentimen_dapatan_isu_tb.sdi_sentimen IS NOT NULL AND UPPER(sentimen_dapatan_isu_tb.sdi_isu) = '".strtoupper($isu->nama)."' LIMIT 1) AS `".$isu->nama."`", FALSE);
+            $this->db->select("(SELECT sentimen_dapatan_isu_tb.sdi_alasan FROM sentimen_dapatan_isu_tb WHERE sentimen_dapatan_isu_tb.sdi_sentimen_bil = sentimen_tb.stBil AND sentimen_dapatan_isu_tb.sdi_sentimen IS NOT NULL AND UPPER(sentimen_dapatan_isu_tb.sdi_isu) = '".strtoupper($isu->nama)."' LIMIT 1) AS `".$isu->nama." - ULASAN`", FALSE);
+        }
     
         // Define table joins
         $joins = [
@@ -397,6 +836,10 @@ class Sentimen_model extends CI_Model
         $this->db->select("UPPER(sentimen_tb.stPerkara) AS lksPerkara");
         $this->db->select("sentimen_tb.stAlasan AS lksUlasan");
         $this->db->select("UPPER(sentimen_tb.stTapisan) AS lksTapisan");
+        $this->db->select("UPPER(sentimen_tb.stIsuPositif) AS lksIsuPositif");
+        $this->db->select("UPPER(sentimen_tb.stIsuNegatif) AS lksIsuNegatif");
+        $this->db->select("UPPER(sentimen_tb.stIsuNeutral) AS lksIsuNeutral");
+        $this->db->select("sentimen_tb.stIsuAlasan AS lksIsuAlasan");
         $this->db->join('pengguna_tb', 'pengguna_tb.bil = sentimen_tb.stPelaporBil', 'left');
         $this->db->join('daerah', 'daerah.bil = sentimen_tb.stDaerahBil', 'left');
         $this->db->join('negeri_tb', 'negeri_tb.nt_bil = daerah.negeri_bil', 'left');
@@ -422,6 +865,7 @@ class Sentimen_model extends CI_Model
     }
 
     public function muatTurunTarikh($tarikhMula, $tarikhTamat){
+        $senaraiIsu = $this->senaraiIsu();
         $this->db->select("sentimen_tb.stBil AS `NOMBOR SIRI`");
         $this->db->select("sentimen_tb.stPenggunaWaktu AS `LAPORAN DIBINA`");
         $this->db->select("pengguna_tb.emel AS `E-MEL PELAPOR`");
@@ -440,6 +884,16 @@ class Sentimen_model extends CI_Model
         $this->db->select("UPPER(sentimen_tb.stSentimen) AS `SENTIMEN`");
         $this->db->select("UPPER(sentimen_tb.stPerkara) AS `PERKARA`");
         $this->db->select("sentimen_tb.stAlasan AS `ULASAN SENTIMEN`");
+        $this->db->select("UPPER(sentimen_tb.stIsuPositif) AS `SENARAI ISU POSITIF`");
+        $this->db->select("UPPER(sentimen_tb.stIsuNegatif) AS `SENARAI ISU NEGATIF`");
+        $this->db->select("UPPER(sentimen_tb.stIsuNeutral) AS `SENARAI ISU NEUTRAL`");
+        $this->db->select("sentimen_tb.stIsuAlasan AS `ULASAN ISU`");
+        
+        foreach($senaraiIsu as $isu){
+            $this->db->select("(SELECT UPPER(sentimen_dapatan_isu_tb.sdi_sentimen) FROM sentimen_dapatan_isu_tb WHERE sentimen_dapatan_isu_tb.sdi_sentimen_bil = sentimen_tb.stBil AND UPPER(sentimen_dapatan_isu_tb.sdi_isu) = '".strtoupper($isu->nama)."' LIMIT 1) AS `".$isu->nama."`", FALSE);
+            $this->db->select("(SELECT sentimen_dapatan_isu_tb.sdi_alasan FROM sentimen_dapatan_isu_tb WHERE sentimen_dapatan_isu_tb.sdi_sentimen_bil = sentimen_tb.stBil AND UPPER(sentimen_dapatan_isu_tb.sdi_isu) = '".strtoupper($isu->nama)."' LIMIT 1) AS `".$isu->nama." - ULASAN`", FALSE);
+        }
+
 
         $this->db->join('pengguna_tb', 'pengguna_tb.bil = sentimen_tb.stPelaporBil', 'left');
         $this->db->join('daerah', 'daerah.bil = sentimen_tb.stDaerahBil', 'left');
@@ -456,6 +910,7 @@ class Sentimen_model extends CI_Model
     }
 
     public function muatTurunSemua(){
+        $senaraiIsu = $this->senaraiIsu();
         $this->db->select("sentimen_tb.stBil AS `NOMBOR SIRI`");
         $this->db->select("sentimen_tb.stPenggunaWaktu AS `LAPORAN DIBINA`");
         $this->db->select("pengguna_tb.emel AS `E-MEL PELAPOR`");
@@ -474,6 +929,15 @@ class Sentimen_model extends CI_Model
         $this->db->select("UPPER(sentimen_tb.stSentimen) AS `SENTIMEN`");
         $this->db->select("UPPER(sentimen_tb.stPerkara) AS `PERKARA`");
         $this->db->select("sentimen_tb.stAlasan AS `ULASAN SENTIMEN`");
+        $this->db->select("UPPER(sentimen_tb.stIsuPositif) AS `SENARAI ISU POSITIF`");
+        $this->db->select("UPPER(sentimen_tb.stIsuNegatif) AS `SENARAI ISU NEGATIF`");
+        $this->db->select("UPPER(sentimen_tb.stIsuNeutral) AS `SENARAI ISU NEUTRAL`");
+        $this->db->select("sentimen_tb.stIsuAlasan AS `ULASAN ISU`");
+        
+        foreach($senaraiIsu as $isu){
+            $this->db->select("(SELECT UPPER(sentimen_dapatan_isu_tb.sdi_sentimen) FROM sentimen_dapatan_isu_tb WHERE sentimen_dapatan_isu_tb.sdi_sentimen_bil = sentimen_tb.stBil AND sentimen_dapatan_isu_tb.sdi_sentimen IS NOT NULL AND UPPER(sentimen_dapatan_isu_tb.sdi_isu) = '".strtoupper($isu->nama)."' LIMIT 1) AS `".$isu->nama."`", FALSE);
+            $this->db->select("(SELECT sentimen_dapatan_isu_tb.sdi_alasan FROM sentimen_dapatan_isu_tb WHERE sentimen_dapatan_isu_tb.sdi_sentimen_bil = sentimen_tb.stBil AND sentimen_dapatan_isu_tb.sdi_sentimen IS NOT NULL AND UPPER(sentimen_dapatan_isu_tb.sdi_isu) = '".strtoupper($isu->nama)."' LIMIT 1) AS `".$isu->nama." - ULASAN`", FALSE);
+        }
 
         $this->db->join('pengguna_tb', 'pengguna_tb.bil = sentimen_tb.stPelaporBil', 'left');
         $this->db->join('daerah', 'daerah.bil = sentimen_tb.stDaerahBil', 'left');
@@ -488,6 +952,7 @@ class Sentimen_model extends CI_Model
     }
 
     public function muatTurun($senaraiNegeri){
+        $senaraiIsu = $this->senaraiIsu();
         $this->db->select("sentimen_tb.stBil AS `NOMBOR SIRI`");
         $this->db->select("sentimen_tb.stPenggunaWaktu AS `LAPORAN DIBINA`");
         $this->db->select("pengguna_tb.emel AS `E-MEL PELAPOR`");
@@ -506,6 +971,15 @@ class Sentimen_model extends CI_Model
         $this->db->select("UPPER(sentimen_tb.stSentimen) AS `SENTIMEN`");
         $this->db->select("UPPER(sentimen_tb.stPerkara) AS `PERKARA`");
         $this->db->select("sentimen_tb.stAlasan AS `ULASAN SENTIMEN`");
+        $this->db->select("UPPER(sentimen_tb.stIsuPositif) AS `SENARAI ISU POSITIF`");
+        $this->db->select("UPPER(sentimen_tb.stIsuNegatif) AS `SENARAI ISU NEGATIF`");
+        $this->db->select("UPPER(sentimen_tb.stIsuNeutral) AS `SENARAI ISU NEUTRAL`");
+        $this->db->select("sentimen_tb.stIsuAlasan AS `ULASAN ISU`");
+        
+        foreach($senaraiIsu as $isu){
+            $this->db->select("(SELECT UPPER(sentimen_dapatan_isu_tb.sdi_sentimen) FROM sentimen_dapatan_isu_tb WHERE sentimen_dapatan_isu_tb.sdi_sentimen_bil = sentimen_tb.stBil AND sentimen_dapatan_isu_tb.sdi_sentimen IS NOT NULL AND UPPER(sentimen_dapatan_isu_tb.sdi_isu) = '".strtoupper($isu->nama)."' LIMIT 1) AS `".$isu->nama."`", FALSE);
+            $this->db->select("(SELECT sentimen_dapatan_isu_tb.sdi_alasan FROM sentimen_dapatan_isu_tb WHERE sentimen_dapatan_isu_tb.sdi_sentimen_bil = sentimen_tb.stBil AND sentimen_dapatan_isu_tb.sdi_sentimen IS NOT NULL AND UPPER(sentimen_dapatan_isu_tb.sdi_isu) = '".strtoupper($isu->nama)."' LIMIT 1) AS `".$isu->nama." - ULASAN`", FALSE);
+        }
 
         $this->db->join('pengguna_tb', 'pengguna_tb.bil = sentimen_tb.stPelaporBil', 'left');
         $this->db->join('daerah', 'daerah.bil = sentimen_tb.stDaerahBil', 'left');
@@ -549,6 +1023,10 @@ class Sentimen_model extends CI_Model
         $this->db->select("UPPER(sentimen_tb.stPerkara) AS lksPerkara");
         $this->db->select("sentimen_tb.stAlasan AS lksUlasan");
         $this->db->select("UPPER(sentimen_tb.stTapisan) AS lksTapisan");
+        $this->db->select("UPPER(sentimen_tb.stIsuPositif) AS lksIsuPositif");
+        $this->db->select("UPPER(sentimen_tb.stIsuNegatif) AS lksIsuNegatif");
+        $this->db->select("UPPER(sentimen_tb.stIsuNeutral) AS lksIsuNeutral");
+        $this->db->select("sentimen_tb.stIsuAlasan AS lksIsuAlasan");
 
         $this->db->join('pengguna_tb', 'pengguna_tb.bil = sentimen_tb.stPelaporBil', 'left');
         $this->db->join('daerah', 'daerah.bil = sentimen_tb.stDaerahBil', 'left');
@@ -864,6 +1342,57 @@ class Sentimen_model extends CI_Model
         $sentimen = $this->input->post('inputSentimen');
         $negeri = $this->input->post('inputNegeri');
 
+        $this->db->join('pengguna_tb', 'pengguna_tb.bil = sentimen_tb.stPelaporBil', 'left');
+        $this->db->join('daerah', 'daerah.bil = sentimen_tb.stDaerahBil', 'left');
+        $this->db->join('negeri_tb', 'negeri_tb.nt_bil = daerah.negeri_bil', 'left');
+        $this->db->join('parlimen_tb', 'parlimen_tb.pt_bil = sentimen_tb.stParlimenBil', 'left');
+        $this->db->join('dun_tb', 'dun_tb.dun_bil = sentimen_tb.stDunBil', 'left');
+        $this->db->where('stTapisan', 'Terima');
+        
+        //WHERE FILTERING
+        //1. FILTERING WAJIB
+        $this->db->where('DATE(stPenggunaWaktu) >=', $tarikhMula);
+        $this->db->where('DATE(stPenggunaWaktu) <=', $tarikhTamat);
+        //2. FILTERING KALAU ADA
+        if($kawasan != 'Semua'){
+            $this->db->where('stKawasan', $kawasan);
+        }
+        if($pekerjaan != 'Semua'){
+            $this->db->where('stPekerjaan', $pekerjaan);
+        }
+        if($julatUmur != 'Semua'){
+            $this->db->where('stUmur', $julatUmur);
+        }
+        if($kaum != 'Semua'){
+            $this->db->where('stKaum', $kaum);
+        }
+        if($sentimen != 'Semua'){
+            $this->db->where('stSentimen', $sentimen);
+        }
+        if($negeri != 'Semua'){
+            $this->db->where('negeri_tb.nt_bil', $negeri);
+        }
+
+        $this->db->order_by($this->table.'.stPenggunaWaktu', 'DESC');
+        $query = $this->db->get($this->table);
+        return $query->result();
+    }
+
+    public function senaraiCarian2()
+    {
+        //INTIALIZATION
+        $this->checkTableExists();
+
+        //FILTERING
+        $tarikhMula = $this->input->post('inputTarikhMula');
+        $tarikhTamat = $this->input->post('inputTarikhTamat');
+        $kawasan = $this->input->post('inputKawasan');
+        $pekerjaan = $this->input->post('inputPekerjaan');
+        $julatUmur = $this->input->post('inputJulatUmur');
+        $kaum = $this->input->post('inputKaum');
+        $sentimen = $this->input->post('inputSentimen');
+        $negeri = $this->input->post('inputNegeri');
+
         
         $this->db->select("sentimen_tb.stBil AS lksBil");
         $this->db->select("sentimen_tb.stPenggunaWaktu AS lksTimestamp");
@@ -1080,6 +1609,10 @@ class Sentimen_model extends CI_Model
         $this->db->select("UPPER(sentimen_tb.stPerkara) AS lksPerkara");
         $this->db->select("sentimen_tb.stAlasan AS lksUlasan");
         $this->db->select("UPPER(sentimen_tb.stTapisan) AS lksTapisan");
+        $this->db->select("sentimen_tb.stIsuPositif AS lksIsuPositif");
+        $this->db->select("sentimen_tb.stIsuNegatif AS lksIsuNegatif");
+        $this->db->select("sentimen_tb.stIsuNeutral AS lksIsuNeutral");
+        $this->db->select("sentimen_tb.stIsuAlasan AS lksIsuAlasan");
         $this->db->join('pengguna_tb', 'pengguna_tb.bil = sentimen_tb.stPelaporBil', 'left');
         $this->db->join('daerah', 'daerah.bil = sentimen_tb.stDaerahBil', 'left');
         $this->db->join('negeri_tb', 'negeri_tb.nt_bil = daerah.negeri_bil', 'left');
@@ -1091,24 +1624,29 @@ class Sentimen_model extends CI_Model
         return $query->result();
     }
 
-    public function tambah(){
+    public function namaIsu($isuBil){
+        $this->db->where('sit_bil', $isuBil);
+        $query = $this->db->get($this->tableIsu);
+        $row = $query->row();
+        return $row->sit_isu;
+    }
+
+    public function tambah() {
+        $this->db->trans_start();
         $this->checkTableExists();
-        $tempPekerjaan = "";
-        $pekerjaan = "";
-        $tempKaum = "";
-        $kaum = "";
-        $tempPekerjaan = $this->input->post('inputPekerjaan');
-        if($tempPekerjaan == "Lain-lain"){
+
+        // --- Handle "Lain-lain" inputs ---
+        $pekerjaan = $this->input->post('inputPekerjaan');
+        if ($pekerjaan == "Lain-lain") {
             $pekerjaan = $this->input->post('inputPekerjaanLain');
-        }else{
-            $pekerjaan = $this->input->post('inputPekerjaan');
         }
-        $tempKaum = $this->input->post('inputKaum');
-        if($tempKaum == 'Lain-lain'){
+
+        $kaum = $this->input->post('inputKaum');
+        if ($kaum == 'Lain-lain') {
             $kaum = $this->input->post('inputKaumLain');
-        }else{
-            $kaum = $this->input->post('inputKaum');
         }
+
+        // --- Insert Main Report Data ---
         $data = array(
             'stTarikhLaporan' => date_format(date_create($this->input->post('inputTarikhLaporan')), 'Y-m-d'),
             'stPelaporBil' => $this->input->post('inputPelaporBil'),
@@ -1125,9 +1663,71 @@ class Sentimen_model extends CI_Model
             'stJantina' => $this->input->post('inputJantina'),
             'stPenggunaBil' => $this->input->post('inputPenggunaBil'),
             'stPenggunaWaktu' => date_format(date_create($this->input->post('inputPenggunaWaktu')), 'Y-m-d H:i:s'),
-            'stTapisan' => 'Terima'
+            'stTapisan' => 'Terima',
+            'stIsuAlasan' => $this->input->post('inputIsuAlasan')
         );
         $this->db->insert($this->table, $data);
+        $laporanBil = $this->db->insert_id();
+
+        // --- Process and Insert Issue Data (Optimized Single Loop) ---
+        $senaraiIsu = $this->input->post('inputIsu');
+        $senaraiAlasanIsu = $this->input->post('inputAlasanIsu');
+        
+        // Initialize all arrays before the loop
+        $dataIsu = [];
+        $isuPositif = [];
+        $isuNegatif = [];
+        $isuNeutral = [];
+        
+        if (!empty($senaraiIsu)) {
+            foreach ($senaraiIsu as $isuBil => $sentimen) {
+                $namaIsu = $this->namaIsu($isuBil);
+                $ulasan = isset($senaraiAlasanIsu[$isuBil]) ? $senaraiAlasanIsu[$isuBil] : '';
+
+                // 1. Prepare data for batch insert
+                $dataIsu[] = array(
+                    'sdi_sentimen_bil' => $laporanBil,
+                    'sdi_isu' => $namaIsu,
+                    'sdi_sentimen' => $sentimen,
+                    'sdi_alasan' => $ulasan
+                );
+
+                // 2. Simultaneously sort issue names by sentiment
+                if ($sentimen == 'Negatif') {
+                    $isuNegatif[] = $namaIsu;
+                } else if ($sentimen == 'Positif') {
+                    $isuPositif[] = $namaIsu;
+                } else {
+                    $isuNeutral[] = $namaIsu;
+                }
+            }
+            
+            // Perform the batch insert if data exists
+            $this->db->insert_batch($this->tableDapatIsu, $dataIsu);
+        }
+        
+        // --- Update Main Report with Aggregated Issues (Optimized Single Query) ---
+        $updateData = [];
+        if (!empty($isuPositif)) {
+            $updateData['stIsuPositif'] = implode(', ', array_unique($isuPositif));
+        }
+        if (!empty($isuNegatif)) {
+            $updateData['stIsuNegatif'] = implode(', ', array_unique($isuNegatif));
+        }
+        if (!empty($isuNeutral)) {
+            $updateData['stIsuNeutral'] = implode(', ', array_unique($isuNeutral));
+        }
+
+        // Run a single update query if there's anything to add
+        if (!empty($updateData)) {
+            $this->db->where('stBil', $laporanBil);
+            $this->db->update($this->table, $updateData);
+        }
+
+        // --- Complete Transaction ---
+        $this->db->trans_complete();
+
+        return $this->db->trans_status();
     }
 
     private function checkTableExists()

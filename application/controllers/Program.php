@@ -2501,7 +2501,14 @@ class Program extends CI_Controller {
     if(count($data['senaraiGambar']) >= $bilanganGambar){
       foreach($data['senaraiGambar'] as $g){
         $url = base_url('assets/img/gambarProgram/').$g->gambar_program_nama_fail;
-        $headers = get_headers($url, 1);
+        $options = [
+            "ssl" => [
+                "verify_peer" => false,
+                "verify_peer_name" => false,
+            ],
+        ];
+        $context = stream_context_create($options);
+        $headers = get_headers($url, 1, $context);
         //if(strpos($headers['Content-Type'], 'video/') !== FALSE){
           $this->prosesSemakanLaporan($bil, "BAHAGIAN J - LAPORAN GAMBAR", $penggunaBil);
           //DO NOTHING

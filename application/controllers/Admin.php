@@ -33,6 +33,14 @@ class Admin extends CI_Controller {
         return $sesi;
     }
 
+    public function killSwitch(){
+        $sesi = $this->sesi();
+        $data['pengguna'] = $this->pengguna();
+        $data = array_merge($data, $this->template($sesi));
+        $data['gunaView'] = "admin/killSwitch";
+        $this->load->view("dashboard/baseTemplate", $data);
+    }
+
     public function liveStatus(){
         $sesi = $this->sesi();
         $data['pengguna'] = $this->pengguna();

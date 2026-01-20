@@ -3,6 +3,59 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Grading extends CI_Controller {
 
+	//PERLU ADA SETIAP CONTROLLER//
+
+	private function template($sesi){
+        $sesi = strtoupper($sesi);
+        switch($sesi){
+            case 'URUSETIA' :
+                $view = "urussetia_na";
+                break;
+            case "DATA" :
+                $view = "us_sismap_na";
+                break;
+            case 'PPD' :
+                $view = "ppd_na";
+                break;
+            case 'NEGERI' :
+                $view = "negeri_na";
+                break;
+            default :
+                redirect(base_url());
+        }
+        $template = [
+            "header" => "$view/susunletak/atas",
+            "sidebar" => "$view/susunletak/sidebar",
+            "navbar" => "$view/susunletak/navbar",
+            "footer" => "$view/susunletak/bawah"
+        ];
+        return $template;
+    }
+
+    private function pengguna(){
+        $penggunaBil = $this->session->userdata("pengguna_bil");
+        $this->load->model("pengguna_model");
+        $pengguna = $this->pengguna_model->pengguna($penggunaBil);
+        return $pengguna;
+    }
+
+    private function sesi(){
+        $sesi = strtoupper($this->session->userdata("peranan"));
+        if(empty($sesi)){
+            redirect(base_url());
+        }
+        if(strpos($sesi, 'PPD') !== false){
+            $sesi = 'PPD';
+        }
+        if(strpos($sesi, 'NEGERI') !== false){
+            $sesi = 'NEGERI';
+        }
+        return $sesi;
+    }
+
+	//TAMAT PERLU ADA SETIAP CONTROLLER//
+
+
 	public function getRumusanGradingDun(){
 		//INITIALIZATION
 		$sesi = strtoupper($this->session->userdata('peranan'));
@@ -763,17 +816,37 @@ class Grading extends CI_Controller {
 		return $grading;
 	}
 
+	public function pru($pruBil)
+	{
+		$sesi = $this->sesi();
+        $data['pengguna'] = $this->pengguna();
+        $data = array_merge($data, $this->template($sesi));
+		$this->load->model(['pilihanraya_model', 'harian_parlimen_model', 'harian_model', 'harian_parlimen_model']);
+		$data['pru'] = $this->pilihanraya_model->pilihanraya($pruBil);
+		if($data['pru']->pilihanraya_jenis == 'PARLIMEN'){
+			$data['senaraiKerusi'] = $this->harian_parlimen_model->senaraiGradingPenuh($data['pru']);
+		}else{
+			$data['senaraiKerusi'] = $this->harian_model->senaraiGradingPenuh($data['pru']);
+		}
+		$data['gunaView'] = ["grading/gradingPru"];
+        $this->load->view("baseTemplate", $data);
+	}
+
 	public function index()
 	{
 		$sesi = strtoupper($this->session->userdata('peranan'));
 		$penggunaBil = $this->session->userdata('pengguna_bil');
-		$this->load->model('pengguna_model');
+		$this->load->model(['pengguna_model', 'pilihanraya_model']);
 		$data['pengguna'] = $this->pengguna_model->pengguna($penggunaBil);
 		switch($sesi){
 			case 'DATA' :
 				$this->load->model('status_grading_model');
 				$data['bilanganGradingDun'] = $this->status_grading_model->bilanganGradingDun();
 				$data['bilanganGradingParlimen'] = $this->status_grading_model->bilanganGradingParlimen();
+				
+				$data['namaPilihanRaya'] = "PRU DU SABAH KE-17";
+				$data['senaraiPilihanraya'] = $this->pilihanraya_model->senarai();
+
 				$this->load->view('us_sismap_na/sismap/harian/lamanUtama', $data);
 				break;
 		}

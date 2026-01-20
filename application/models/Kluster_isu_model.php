@@ -2,54 +2,6 @@
 
 class Kluster_isu_model extends CI_Model {
 
-    /**
-     * Mendapatkan nama kluster berdasarkan nombor siri (ID).
-     * @param int $kluster_bil Nombor siri kluster.
-     * @return string|null Nama kluster atau null jika tidak dijumpai.
-     */
-    public function dapatkan_nama($kluster_bil)
-    {
-        $this->db->select('kit_nama');
-        $this->db->where('kit_bil', $kluster_bil);
-        $query = $this->db->get('kluster_isu_tb'); // Pastikan nama jadual betul
-        $result = $query->row();
-
-        if ($result) {
-            return $result->kit_nama;
-        }
-        return 'Kluster Tidak Dinamakan'; // Nilai lalai jika tidak dijumpai
-    }
-
-    /**
-     * Mengira bilangan laporan hari ini untuk setiap kluster.
-     * Menggunakan LEFT JOIN untuk memastikan semua kluster dipaparkan, walaupun tiada laporan.
-     * @return array
-     */
-    public function bilangan_laporan_harian_per_kluster()
-    {
-        $tarikh_hari_ini = date('Y-m-d');
-
-        $this->db->select([
-            'kluster_isu_tb.kit_nama',
-            'kluster_isu_tb.kit_shortform',
-            'COUNT(lapis_tb.lapis_bil) as bilangan_hari_ini' // Mengira laporan dari lapis_tb
-        ]);
-
-        $this->db->from('kluster_isu_tb');
-
-        // Guna LEFT JOIN untuk sertakan kluster dengan 0 laporan
-        $this->db->join('lapis_tb', 
-            "lapis_tb.lapis_kluster_bil = kluster_isu_tb.kit_bil AND lapis_tb.lapis_tarikh_laporan = '{$tarikh_hari_ini}'", 
-            'left'
-        );
-
-        $this->db->group_by('kluster_isu_tb.kit_bil');
-        $this->db->order_by('kluster_isu_tb.kit_nama', 'ASC');
-
-        $query = $this->db->get();
-        return $query->result();
-    }
-
     //======================================================================
     // FUNGSI BARU DITAMBAH DI SINI
     //======================================================================

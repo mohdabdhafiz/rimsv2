@@ -20,7 +20,7 @@ $this->load->view('us_sismap_na/susunletak/navbar');
     
     <section class="section">
 
-    <div class="row g-3">
+    <div class="row g-3 mb-3">
         <div class="col-12 col-lg-6 col-md-6 col-sm-6">
             <div class="text-center border rounded p-3 bg-white shadow-sm">
                 <div class="text-secondary">
@@ -59,8 +59,69 @@ $this->load->view('us_sismap_na/susunletak/navbar');
                 </a>
             </div>
         </div>
-    </div>
 
+
+        <?php foreach($senaraiPilihanraya as $pilihanraya): ?>      
+        <div class="col-12 col-lg-4 col-md-6 col-sm-12">
+            <div class="border rounded p-3 bg-white shadow-sm h-100 d-flex flex-column">
+            <h1 class="display-4 text-truncate"><?= $pilihanraya->pilihanraya_singkatan ?></h1>
+            <table class="table table-hover flex-grow-1">
+                <tr>
+                <th>Nombor Siri</th>
+                <td>:</td>
+                <td><?= $pilihanraya->pilihanraya_bil ?></td>
+                </tr>
+                <tr>
+                <th>Nama Pilihan Raya</th>
+                <td>:</td>
+                <td><?= $pilihanraya->pilihanraya_nama ?></td>
+                </tr>
+                <tr>
+                <th>Tarikh Penamaan Calon</th>
+                <td>:</td>
+                <td><?= $pilihanraya->pilihanraya_penamaan_calon ?></td>
+                </tr>
+                <tr>
+                <th>Tarikh Lock Status</th>
+                <td>:</td>
+                <td><?= $pilihanraya->pilihanraya_lock_status ?></td>
+                </tr>
+                <tr>
+                <th>Jumlah Parlimen</th>
+                <td>:</td>
+                <td><?= $pilihanraya->kerusiParlimenBilangan ?></td>
+                </tr>
+                <tr>
+                <th>Jumlah DUN</th>
+                <td>:</td>
+                <td><?= $pilihanraya->kerusiDunBilangan ?></td>
+                </tr>
+                <tr>
+                <th>Jenis Pilihan Raya</th>
+                <td>:</td>
+                <td><?= $pilihanraya->pilihanraya_jenis ?></td>
+                </tr>
+                <tr>
+                <th>Status Gerak Kerja</th>
+                <td>:</td>
+                <td><?= $pilihanraya->pilihanraya_status ?></td>
+                </tr>
+            </table>
+            <?php if ($pilihanraya->pilihanraya_penamaan_calon < date("Y", 2000)): ?>
+                <div class="alert alert-danger" role="alert">
+                    Sila kemaskini maklumat pilihanraya. Terutamanya tarikh penamaan calon dan tarikh lock status.
+                </div>
+                <a href="#" class="btn btn-secondary w-100 mt-auto disabled">Lihat Grading</a>
+            <?php else: ?>
+                <a href="<?= site_url("grading/pru/{$pilihanraya->pilihanraya_bil}") ?>" class="btn btn-primary w-100 mt-auto">Lihat Grading</a>
+            <?php endif; ?>
+            </div>
+        </div>
+        <?php endforeach; ?>
+
+
+
+    </div>
 
     </section>
 

@@ -5,6 +5,13 @@ class Parti_model extends CI_Model {
 
     protected $table = 'parti_tb';
 
+    public function satuParti($partiBil){
+        $this->db->select('parti_bil AS partiBil, parti_nama AS partiNama, parti_singkatan AS partiSingkatan, parti_logo AS partiLogo, parti_warna AS partiWarna, parti_jenis AS partiJenis');
+        $this->db->where('parti_bil', $partiBil);
+        $query = $this->db->get($this->table);
+        return $query->row();
+    }
+
     public function bilanganLaporanUtama(){
         $this->db->select("COUNT(*) AS bilanganLaporan");
         $query = $this->db->get($this->table);
@@ -16,7 +23,9 @@ class Parti_model extends CI_Model {
         $this->db->select("parti_tb.parti_bil AS partiBil");
         $this->db->select("parti_tb.parti_warna AS partiWarna");
         $this->db->select("parti_tb.parti_singkatan AS partiSingkatan");
+        $this->db->select("foto_tb.foto_nama AS partiLogo");
         $this->db->select("UPPER(parti_tb.parti_nama) AS partiNama");
+        $this->db->join('foto_tb', 'foto_tb.foto_bil = parti_tb.parti_logo', 'left');
         $this->db->order_by('partiNama', 'ASC');
         $query = $this->db->get($this->table);
         return $query->result();

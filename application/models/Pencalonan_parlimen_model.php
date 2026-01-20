@@ -5,6 +5,24 @@ class Pencalonan_parlimen_model extends CI_Model {
 
     protected $table = 'pencalonan_parlimen_tb';
 
+    public function senaraiPartiCalon($senaraiPru){
+        $this->db->select("parti_tb.parti_bil AS partiBil");
+        $this->db->select("parti_tb.parti_warna AS partiWarna");
+        $this->db->select("parti_tb.parti_singkatan AS partiSingkatan");
+        $this->db->select("foto_tb.foto_nama AS partiLogo");
+        $this->db->select("UPPER(parti_tb.parti_nama) AS partiNama");
+        $this->db->join('parti_tb', 'parti_tb.parti_bil = pencalonan_parlimen_tb.pencalonan_parlimen_partiBil', 'left');
+        $this->db->join('foto_tb', 'foto_tb.foto_bil = parti_tb.parti_logo', 'left');
+        $this->db->group_start();
+        foreach($senaraiPru as $pru){
+            $this->db->or_where('pencalonan_parlimen_tb.pencalonan_parlimen_pilihanrayaBil', $pru->pilihanraya_bil);
+        }
+        $this->db->group_end();
+        $this->db->order_by('parti_tb.parti_nama', 'ASC');
+        $query = $this->db->get($this->table);
+        return $query->result();
+    }
+
     public function senaraiKeputusanTidakRasmi($pilihanrayaBil){
         $columns = [
             "UPPER(parti_tb.parti_singkatan) AS partiSingkatan",

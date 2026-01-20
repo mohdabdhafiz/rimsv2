@@ -5,15 +5,41 @@ class Pengguna_model extends CI_Model {
 
     protected $table = 'pengguna_tb';
 
-    /**
-     * Mengira jumlah keseluruhan pengguna yang mempunyai peranan 'PPD'.
-     * @return int
-     */
-    public function jumlah_pelapor_ppd()
+    public function taburan_perjawatan()
     {
-        $this->db->join('peranan_tb', 'peranan_tb.peranan_bil = pengguna_tb.pengguna_peranan_bil', 'left');
-        $this->db->like('peranan_tb.peranan_nama', 'PPD', 'after');
-        return $this->db->count_all_results('pengguna_tb');
+        $this->db->select("
+            COUNT(bil) AS jumlah, 
+            UPPER(pekerjaan) AS label
+        ");
+
+        $this->db->from($this->table);
+        $this->db->where('pengguna_status !=', '');
+        $this->db->group_by('pekerjaan');
+        $this->db->order_by('jumlah', 'DESC');
+        $this->db->order_by('pekerjaan', 'DESC');
+        
+        $query = $this->db->get();
+        return $query->result();
+    }
+
+    public function pelapor($pelaporBil){
+        $this->db->select("
+            bil AS penggunaBil, 
+            nama_penuh AS penggunaNama, 
+            no_tel AS penggunaNoTel, 
+            pengguna_ic AS penggunaNoIc, 
+            emel AS penggunaEmel, 
+            pekerjaan AS penggunaJawatan, 
+            pengguna_peranan_nama AS penggunaPerananNama, 
+            pengguna_status AS penggunaStatus, 
+            pengguna_waktu AS penggunaWaktu, 
+            japen_tb.jt_pejabat AS penggunaPenempatan
+        ");
+        $this->db->join("organisasi", "organisasi.o_peranan = pengguna_tb.pengguna_peranan_bil", "left");
+        $this->db->join("japen_tb", "japen_tb.jt_bil = organisasi.o_japen", "left");
+        $this->db->where('bil', $pelaporBil);
+        $query = $this->db->get($this->table);
+        return $query->row();
     }
 
     public function update20250716(){
@@ -73,6 +99,21 @@ class Pengguna_model extends CI_Model {
             'UPPER(pengguna_tb.nama_penuh) AS penggunaNama'
         ];
         $this->db->select($column);
+        $this->db->order_by("penggunaNama", "ASC");
+        $query = $this->db->get($this->table);
+        return $query->result();
+    }
+
+    public function senaraiPelaporKedudukan(){
+        $column = [
+            'pengguna_tb.bil AS penggunaBil', 
+            'UPPER(pengguna_tb.nama_penuh) AS penggunaNama',
+            'UPPER(pengguna_tb.pekerjaan) AS penggunaJawatan',
+            'UPPER(pengguna_tb.pengguna_tempat_tugas) AS penggunaPenempatan'
+        ];
+        $this->db->select($column);
+        $this->db->where("pengguna_tb.pengguna_status !=", "");
+        $this->db->where("pengguna_tb.pengguna_peranan_bil !=", "");
         $this->db->order_by("penggunaNama", "ASC");
         $query = $this->db->get($this->table);
         return $query->result();

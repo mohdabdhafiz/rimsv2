@@ -4,7 +4,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Utama extends CI_Controller {
 
 	private function bilanganLaporan(){
-		 $this->load->model(['pengguna_model', 'program_model', 'komuniti_model', 'peranan_model', 'obp_model', 'lapis_model', 'harian_parlimen_model', 'harian_model', 'pilihanraya_model', 'pencalonan_parlimen_model', 'pencalonan_model', 'parti_model', 'negeri_model', 'daerah_model', 'parlimen_model', 'dun_model', 'kelabmalaysiaku_model']);
+		$this->load->model(['pengguna_model', 'program_model', 'komuniti_model', 'peranan_model', 'obp_model', 'lapis_model', 'harian_parlimen_model', 'harian_model', 'pilihanraya_model', 'pencalonan_parlimen_model', 'pencalonan_model', 'parti_model', 'negeri_model', 'daerah_model', 'parlimen_model', 'dun_model']);
 		$bilanganLaporan = array();
 		$sesi = strtoupper($this->session->userdata('peranan'));
 		switch($sesi){
@@ -31,8 +31,6 @@ class Utama extends CI_Controller {
 				$bilanganLaporan['daerah'] = $this->daerah_model->bilanganLaporanUtama();
 				$bilanganLaporan['parlimen'] = $this->parlimen_model->bilanganLaporanUtama();
 				$bilanganLaporan['dun'] = $this->dun_model->bilanganLaporanUtama();
-				// TAMBAHKAN BARIS INI untuk mendapatkan bilangan Kelab Malaysiaku
-            	$bilanganLaporan['kelabmalaysiaku'] = $this->kelabmalaysiaku_model->bilanganLaporanUtama(); // Anda mungkin perlu cipta fungsi ini dalam model
 				break;
 			default:
 				redirect(base_url());
@@ -109,11 +107,16 @@ class Utama extends CI_Controller {
 		if(strpos($sesi, 'PPN') !== FALSE){
 			$sesi = "PPN";
 		}
+
+
 		$this->load->model('pengguna_model');
 		$penggunaBil = $this->session->userdata('pengguna_bil');
 		$perananBil = $this->session->userdata('peranan_bil');
 		$data['pengguna'] = $this->pengguna_model->pengguna($penggunaBil);
 		switch($sesi){
+			case 'UPM' :
+				redirect('upm');
+				break;
 			case 'SKRIN' :
 				$this->load->model('program_gambar_model');
 				$images = glob("./assets/img/gambarProgram/*.{jpg,png,gif}", GLOB_BRACE);
@@ -155,7 +158,54 @@ class Utama extends CI_Controller {
 										$this->load->view('susunletak/atas', $data);
 										$this->load->view('top/utama');
 										$this->load->view('susunletak/bawah');
-										break;							
+										break;
+
+			case 'LAPIS' :	
+				$this->load->model([
+					'kluster_isu_model', 
+					'negeri_model'
+				]);
+				
+				$data['senarai_negeri'] = $this->negeri_model->senarai();
+				$data['senarai_kluster'] = $this->kluster_isu_model->senarai_penuh();
+				$this->load->view('susunletak/atas', $data);
+				$this->load->view('cpi/utama');
+				$this->load->view('susunletak/bawah');
+				break;
+
+			case 'LAPIS LAMA' :	
+				$data['tutupLama'] = FALSE;
+				$this->load->model('kluster_isu_model');
+				$this->load->model('pengguna_model');
+				$this->load->model('negeri_model');
+				$this->load->model('sentimen_model');
+				$this->load->model("lapis_reject_model");
+				$data['senarai_negeri'] = $this->negeri_model->senarai();
+				$data['data_isu'] = $this->kluster_isu_model;
+				$data['data_pengguna'] = $this->pengguna_model;
+				$senarai_pelapor = $this->pengguna_model->senarai_penuh_pelapor();
+				$data['bilangan_pelapor'] = is_array($senarai_pelapor) ? count($senarai_pelapor) : 0;
+				// Cache results to avoid redundant queries
+				$senarai_pelapor = $this->pengguna_model->senarai_penuh_pelapor();
+				$senarai_kluster_isu = $this->kluster_isu_model->senarai();
+
+				$data['bilangan_pelapor'] = count($senarai_pelapor);
+				$data['bilangan_kluster_isu'] = count($senarai_kluster_isu);
+				$data['senarai_kluster'] = $this->kluster_isu_model->senarai_penuh();
+				$data['dataKlusterIsu'] = $this->kluster_isu_model;
+				$data['senaraiSemuaSentimen'] = $this->sentimen_model->semuaTanpaTapisan();
+				$data['senaraiSentimen'] = $this->sentimen_model->semua();
+				$hariIni = date('Y-m-d');
+				$data['senaraiSentimenHariIni'] = $this->sentimen_model->satuTarikh($hariIni);
+				$data['senaraiTapisanSentimen'] = $this->sentimen_model->tapisan();
+				$bilanganLaporanBencanaObj = $this->bencana_model->bilanganLaporan();
+				$data['bilanganLaporanBencana'] = ($bilanganLaporanBencanaObj !== null && isset($bilanganLaporanBencanaObj->bilangan)) ? $bilanganLaporanBencanaObj->bilangan : 0;
+				$data["bilanganLaporanTolak"] = $this->lapis_reject_model->bilanganLaporanDiTolak();
+				$this->load->view('susunletak/atas', $data);
+				$this->load->view('cpi/utama');
+				$this->load->view('susunletak/bawah');
+				break;
+										
 			case 'PERUMUS'			:	$this->load->view('susunletak/atas');
 										$this->load->view('perumus/utama');
 										$this->load->view('susunletak/bawah');
@@ -166,6 +216,13 @@ class Utama extends CI_Controller {
 										$this->load->view('pegawai_lapangan/slideshow2');
 										//$this->load->view('pegawai_lapangan/bawah');
 										break;
+			case 'URUSETIA'			:	
+				$data['bilanganLaporan'] = $this->bilanganLaporan();
+				$this->load->view('susunletak/atas', $data);
+				$this->load->view('urusetia/tajuk');
+				$this->load->view('urusetia/urusetia_nav');
+				$this->load->view('susunletak/bawah');
+				break;
 			case 'ADMIN'			:	
 				$this->load->view('admin_na/utama', $data);
 										break;
@@ -184,7 +241,7 @@ class Utama extends CI_Controller {
 										$this->load->view('dashboard/landing', $data);
 										$this->load->view('dashboard/bawah');
 										break;
-			case 'TOPONE'			:	$this->load->model('pilihanraya_model');
+			case 'TOPONE2'			:	$this->load->model('pilihanraya_model');
 				$this->load->model('parlimen_model');
 				$this->load->model('dun_model');
 				$data['senaraiParlimen'] = $this->parlimen_model->senaraiWakilRakyat();
@@ -195,12 +252,15 @@ class Utama extends CI_Controller {
 										$this->load->view('topone/senaraiAhli');
 										$this->load->view('susunletak/bawah');
 										break;
+			case 'TOPONE'			:	
+				redirect('dashboard');
+										break;
 			case 'PPD'				:	
 
 				//CONFIGURATIONS
 				$data['konfigurasiGradingLama'] = 'TUTUP';
 
-										$this->load->model('japen_model');
+										$this->load->model(['japen_model', 'pegawai_model', 'kempen_model']);
 										$this->load->model('pengguna_model');
 										$this->load->model('parlimen_model');
 										$this->load->model('dun_model');
@@ -282,6 +342,12 @@ class Utama extends CI_Controller {
 												$data['bilanganLaporanSemua'] = $this->program_model->bilanganLaporanSemuaPpd($data['pengguna']);
 												$data['senaraiStatusLaporan'] = $this->program_model->senaraiStatusPpd($data['pengguna']);
 											}
+											//RIMS@SISMAP - Laporan Aktiviti Kempen Pilihan Raya
+											$data['bilanganLaporanAktivitiKempen'] = $this->kempen_model->bilanganLaporanAktivitiKempen($penggunaBil)->bilanganLaporan;
+											if(empty($data['bilanganLaporanAktivitiKempen'])){
+												$data['bilanganLaporanAktivitiKempen'] = 'BELUM DITETAPKAN';
+											}
+											$data['senaraiTugasanPru'] = $this->pegawai_model->senaraiTugasanPru($data['pengguna']->bil);
 											$data['header'] = 'ppd_na/susunletak/atas';
 											$data['navbar'] = 'ppd_na/susunletak/navbar';
 											$data['sidebar'] = 'ppd_na/susunletak/sidebar';
@@ -293,7 +359,7 @@ class Utama extends CI_Controller {
 				$data['bilanganJangkaanCalonParlimen'] = 0;
 				$data['bilanganJangkaanCalonDun'] = 0;
 				$data['bilanganPru'] = 0;
-				$this->load->model('pilihanraya_model');
+				$this->load->model(['pilihanraya_model', 'kempen_model']);
 				$this->load->model('jangkaan_calon_model');
 				$this->load->model('negeri_model');
 				$senaraiNegeri = $this->negeri_model->senaraiTugasanNegeri($data['pengguna']->pengguna_peranan_bil);
@@ -309,6 +375,11 @@ class Utama extends CI_Controller {
 				$bilanganPruParlimen = $this->pilihanraya_model->senaraiPruParlimenNegeri($senaraiNegeri);
 				if(!empty($bilanganPruParlimen)){
 					$data['bilanganPru'] = $data['bilanganPru'] + count($bilanganPruParlimen);
+				}
+				$data['bilanganLaporanAktivitiKempen'] = 0;
+				$bilanganLaporanAktivitiKempen = $this->kempen_model->bilanganLaporanAktivitiKempenNegeri($senaraiNegeri);
+				if(!empty($bilanganLaporanAktivitiKempen)){
+					$data['bilanganLaporanAktivitiKempen'] = $bilanganLaporanAktivitiKempen->bilanganLaporan;
 				}
 				$this->load->view('negeri_na/utama', $data);
 				break;
@@ -345,50 +416,7 @@ class Utama extends CI_Controller {
 			case 'DATA' :
 				$this->load->model('pilihanraya_model');
 				$data['senaraiPruAktif'] = $this->pilihanraya_model->senaraiPruAktif();
-
-				// Guna corak baharu
-				$data['role_view_folder'] = 'us_sismap_na'; // Folder templat untuk peranan DATA
-				$data['content_view'] = 'us_sismap_na/utama';
-				
-				$this->load->view('templates/base_template', $data);
-				break;
-			case 'LAPIS' :
-				// Muatkan model yang diperlukan untuk papan pemuka LAPIS
-				$this->load->model(['kluster_isu_model', 'pengguna_model', 'sentimen_model', 'lapis_reject_model', 'japen_model']);
-				
-				// Dapatkan data untuk dipaparkan pada kad statistik dan widget
-				$data['senarai_kluster'] = $this->kluster_isu_model->senarai_penuh();
-				$data['bilangan_pelapor'] = is_array($this->pengguna_model->senarai_penuh_pelapor()) ? count($this->pengguna_model->senarai_penuh_pelapor()) : 0;
-				$data['senaraiSentimenTerkini'] = $this->sentimen_model->laporan_terkini(5); // Ambil 5 laporan terkini
-				$data['bilanganLaporanTolak'] = $this->lapis_reject_model->bilanganLaporanDiTolak();
-
-				// KEMAS KINI: Panggil data PPD tanpa had
-    			$data['rumusanPpd'] = $this->japen_model->rumusan_pelapor_ppd_teratas(); // Had 5 telah dibuang
-
-				// TAMBAHAN BAHARU: Dapatkan jumlah keseluruhan pelapor PPD
-    			$data['jumlahPelaporPpd'] = $this->pengguna_model->jumlah_pelapor_ppd();
-
-				// TAMBAHAN BAHARU: Panggil data untuk laporan harian per kluster
-    			$data['laporanHarianKluster'] = $this->kluster_isu_model->bilangan_laporan_harian_per_kluster();
-
-				// Guna corak templat universal
-				$data['page_title'] = 'Papan Pemuka LAPIS';
-				$data['role_view_folder'] = 'us_lapis_na'; // Berdasarkan struktur fail asal anda
-				$data['content_view'] = 'lapis/dashboard'; // Fail paparan baharu yang akan kita cipta
-				
-				$this->load->view('templates/base_template', $data);
-				break;
-			case 'URUSETIA': 
-				$data['bilanganLaporan'] = $this->bilanganLaporan();
-
-				// 1. Tetapkan folder templat untuk peranan ini
-				$data['role_view_folder'] = 'urusetia_na'; 
-				
-				// 2. Tetapkan fail kandungan yang ingin dipaparkan
-				$data['content_view'] = 'urusetia/dashboard';
-				
-				// 3. Muatkan templat induk universal (ia akan uruskan yang lain)
-				$this->load->view('templates/base_template', $data);
+				$this->load->view('us_sismap_na/utama', $data);
 				break;
 			default 				: 	
 				$this->load->view('login/login.php');

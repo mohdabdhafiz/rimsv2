@@ -14,41 +14,6 @@ class Lapis2_model extends CI_Model
     protected $tableName = 'lapis_tb';
 
     /**
-     * Mendapatkan statistik kiraan laporan (jumlah, diterima, dipinda, ditolak)
-     * untuk satu kluster spesifik.
-     * @param int $kluster_bil Nombor siri kluster.
-     * @return object
-     */
-    public function dapatkan_statistik_laporan_kluster($kluster_bil)
-    {
-        $this->db->select([
-            'COUNT(*) AS jumlah_laporan',
-            "COUNT(CASE WHEN lapis_status = 'Laporan Diterima' THEN 1 END) AS diterima",
-            "COUNT(CASE WHEN lapis_status = 'Laporan Dipinda' THEN 1 END) AS dipinda",
-            "COUNT(CASE WHEN lapis_status = 'Laporan Ditolak' THEN 1 END) AS ditolak"
-        ]);
-        $this->db->from('lapis_tb'); // Pastikan nama jadual betul
-        $this->db->where('lapis_kluster_bil', $kluster_bil);
-
-        $query = $this->db->get();
-        return $query->row();
-    }
-
-    /**
-     * Mendapatkan senarai penuh laporan berdasarkan nombor siri kluster.
-     * @param int $kluster_bil Nombor siri kluster.
-     * @return array
-     */
-    public function laporan_mengikut_kluster($kluster_bil)
-    {
-        // Contoh query asas. Anda boleh tambah JOIN untuk dapatkan nama pelapor, dll.
-        $this->db->where('lapis_kluster_bil', $kluster_bil);
-        $this->db->order_by('lapis_tarikh_laporan', 'DESC');
-        $query = $this->db->get('lapis_tb'); // Pastikan nama jadual betul
-        return $query->result();
-    }
-
-    /**
      * Constructor
      */
     public function __construct()
@@ -142,6 +107,38 @@ class Lapis2_model extends CI_Model
     //======================================================================
     // CRUD FUNCTIONS (Create, Read, Update, Delete)
     //======================================================================
+
+    // Buka fail: application/models/lapis2_model.php
+    // Tambah fungsi baru ini di dalamnya:
+
+    /**
+     * Fungsi untuk menyemak sama ada laporan yang sama sudah wujud.
+     * @param array $criteria Kriteria carian (cth: pelapor, kluster, tajuk, dll.)
+     * @return bool true jika wujud, false jika tidak.
+     */
+    public function semak_laporan_sama($criteria)
+    {
+        $this->db->where('DATE(lapis_tarikh_laporan)', date('Y-m-d', strtotime($criteria['lapis_tarikh_laporan'])));
+        $this->db->where('lapis_negeri_bil', $criteria['lapis_negeri_bil']);
+        $this->db->where('lapis_daerah_bil', $criteria['lapis_daerah_bil']);
+        $this->db->where('lapis_parlimen_bil', $criteria['lapis_parlimen_bil']);
+        $this->db->where('lapis_dun_bil', $criteria['lapis_dun_bil']);
+        $this->db->where('lapis_dm_bil', $criteria['lapis_dm_bil']);
+        $this->db->where('lapis_tajuk_isu', $criteria['lapis_tajuk_isu']);
+        $this->db->where('lapis_ringkasan_isu', $criteria['lapis_ringkasan_isu']);
+        $this->db->where('lapis_kluster_bil', $criteria['lapis_kluster_bil']);
+        $this->db->where('lapis_pelapor_bil', $criteria['lapis_pelapor_bil']);
+
+        $query = $this->db->get('lapis_tb'); // Andaian nama jadual adalah 'lapis_tb'
+
+        if ($query->num_rows() > 0) {
+            // Laporan yang sama ditemui
+            return true;
+        } else {
+            // Tiada laporan yang sama
+            return false;
+        }
+    }
 
     /**
      * Inserts a new report into the database.
@@ -386,35 +383,6 @@ class Lapis2_model extends CI_Model
         $this->db->order_by('lapis_negeri_nama', 'ASC');
         $query = $this->db->get();
         return $query->result();
-    }
-
-     /**
-     * Mengira jumlah semua laporan dalam jadual lapis_tb.
-     */
-    public function kira_semua()
-    {
-        // 'lapis_tb' adalah nama jadual anda. Sila ubah jika berbeza.
-        return $this->db->count_all('lapis_tb');
-    }
-
-    /**
-     * Mengira jumlah laporan berdasarkan status tertentu (cth: 'Ditolak').
-     * @param string $status Status laporan yang ingin dikira.
-     */
-    public function kira_mengikut_status($status)
-    {
-        $this->db->where('lapis_status', $status);
-        return $this->db->count_all_results('lapis_tb');
-    }
-
-    /**
-     * Mengira jumlah laporan berdasarkan nombor siri kluster.
-     * @param int $kluster_bil Nombor siri (ID) bagi kluster.
-     */
-    public function kira_mengikut_kluster($kluster_bil)
-    {
-        $this->db->where('lapis_kluster_bil', $kluster_bil);
-        return $this->db->count_all_results('lapis_tb');
     }
     
 }

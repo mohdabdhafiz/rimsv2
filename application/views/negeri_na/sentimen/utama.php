@@ -1,926 +1,252 @@
-<?php 
-$this->load->view('negeri_na/susunletak/atas');
-$this->load->view('negeri_na/susunletak/sidebar');
-$this->load->view('negeri_na/susunletak/navbar');
-?>
 
 <main id="main" class="main">
 
-<div class="pagetitle">
-        <h1>RIMS@LPK</h1>
+    <div class="pagetitle">
+        <h1>Papan Pemuka Sentimen</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="<?= base_url() ?>">Utama</a></li>
+                <li class="breadcrumb-item"><a href="<?= base_url('sentimen/urus_tadbir') ?>">Utama</a></li>
+                <li class="breadcrumb-item active">Analisis Isu & Sentimen</li>
             </ol>
         </nav>
-    </div><!-- End Page Title -->
+    </div><section class="section dashboard">
+        <div class="row">
 
-    
-    <section class="section">
+            <div class="col-lg-8">
+                <div class="row">
 
-    <div class="row g-3 mb-3">
-
-    <div class="col-12">
-            <div class="alert alert-danger">
-                <span>DALAM PEMBINAAN. SEDANG DIBANGUNKAN. ISU PADA KIRAAN.</span>
+                    <div class="col-xxl-4 col-md-6">
+    <div class="card info-card sales-card">
+        <div class="card-body">
+            <h5 class="card-title">Isu Aktif <span>| Semasa</span></h5>
+            <div class="d-flex align-items-center">
+                <div class="ps-3">
+                    <h6 id="kpi-aktif"><?= $statistik->jumlah_isu_aktif ?></h6>
+                    <span class="text-success small pt-1 fw-bold">Dipantau</span>
+                </div>
             </div>
+        </div>
     </div>
+</div>
 
-        <div class="col-12 col-lg-6">
-            <div class="p-3 border rounded bg-white">
-                <h5>Mingguan</h5>
-                <canvas id="mingguanChart"></canvas>
+<div class="col-xxl-4 col-md-6">
+    <div class="card info-card revenue-card"> <div class="card-body">
+            <h5 class="card-title">Sentimen Dominan</h5>
+            <div class="d-flex align-items-center">
+                 <div class="ps-3">
+                    <h6 id="kpi-dominan"><?= $statistik->dominan_keseluruhan ?></h6>
+                </div>
             </div>
         </div>
-
-        <div class="col-12 col-lg-6">
-            <div class="p-3 border rounded bg-white">
-                <h5>Pelapor</h5>
-                <canvas id="pelaporChart"></canvas>
-            </div>
-        </div>
-
-        <div class="col-12 col-lg-6">
-            <div class="p-3 border rounded bg-white">
-                <h5>Organisasi</h5>
-                <canvas id="organisasiChart"></canvas>
-            </div>
-        </div>
-
-        <div class="col-12 col-lg-6">
-            <div class="p-3 border rounded bg-white">
-                <h5>Negeri</h5>
-                <canvas id="negeriChart"></canvas>
-            </div>
-        </div>
-
-        <div class="col-12 col-lg-6">
-            <div class="p-3 border rounded bg-white">
-                <h5>Daerah</h5>
-                <canvas id="daerahChart"></canvas>
-            </div>
-        </div>
-
-        <div class="col-12 col-lg-6">
-            <div class="p-3 border rounded bg-white">
-                <h5>Parlimen</h5>
-                <canvas id="parlimenChart"></canvas>
-            </div>
-        </div>
-
-        <div class="col-12 col-lg-6">
-            <div class="p-3 border rounded bg-white">
-                <h5>DUN</h5>
-                <canvas id="dunChart"></canvas>
-            </div>
-        </div>
-
-        <div class="col-12 col-lg-6">
-            <div class="p-3 border rounded bg-white">
-                <h5>Kawasan</h5>
-                <canvas id="kawasanChart"></canvas>
-            </div>
-        </div>
-
-        <div class="col-12 col-lg-6">
-            <div class="p-3 border rounded bg-white">
-                <h5>Pekerjaan</h5>
-                <canvas id="pekerjaanChart"></canvas>
-            </div>
-        </div>
-
-        <div class="col-12 col-lg-6">
-            <div class="p-3 border rounded bg-white">
-                <h5>Kategori Umur</h5>
-                <canvas id="umurChart"></canvas>
-            </div>
-        </div>
-
-        <div class="col-12 col-lg-6">
-            <div class="p-3 border rounded bg-white">
-                <h5>Kaum</h5>
-                <canvas id="kaumChart"></canvas>
-            </div>
-        </div>
-
-        <div class="col-12 col-lg-6">
-            <div class="p-3 border rounded bg-white">
-                <h5>Jantina</h5>
-                <canvas id="jantinaChart"></canvas>
-            </div>
-        </div>
-
     </div>
+</div>
 
+<div class="col-xxl-4 col-xl-12">
+    <div class="card info-card customers-card">
+        <div class="card-body">
+            <h5 class="card-title">Isu Kritikal</h5>
+            <div class="d-flex align-items-center">
+                 <div class="ps-3">
+                    <h6 id="kpi-isu-kritikal"><?= substr($statistik->isu_paling_negatif, 0, 25) ?>...</h6>
+                    <span id="kpi-jumlah-kritikal" class="text-danger small pt-1 fw-bold"><?= $statistik->jumlah_paling_negatif ?></span> 
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Analisis 5 Isu Utama <span>| Pecahan Sentimen</span></h5>
+                                <canvas id="topIsuChart" style="max-height: 400px;"></canvas>
+                            </div>
+                        </div>
+                    </div><div class="col-12">
+                        <div class="card recent-sales overflow-auto">
+                            <div class="card-body">
+                                <h5 class="card-title">Senarai Isu <span>| Status Semasa</span></h5>
+
+                                <table class="table table-borderless datatable">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Isu</th>
+                                            <th scope="col">Tarikh</th>
+                                            <th scope="col" class="text-center">Jumlah</th>
+                                            <th scope="col" class="text-center">Dominan</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">Tindakan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach($senarai_isu as $isu): ?>
+                                        <tr>
+                                            <td class="fw-bold text-primary"><?= $isu->sit_isu ?></td>
+                                            <td><?= date('d/m/Y', strtotime($isu->sit_tarikh_dibina)) ?></td>
+                                            <td class="text-center fw-bold"><?= $isu->jumlah_laporan ?></td>
+                                            <td class="text-center">
+                                                <?php if($isu->sentimen_dominan == 'Positif'): ?>
+                                                    <span class="badge bg-success"><i class="bi bi-emoji-smile me-1"></i> Positif</span>
+                                                <?php elseif($isu->sentimen_dominan == 'Negatif'): ?>
+                                                    <span class="badge bg-danger"><i class="bi bi-emoji-frown me-1"></i> Negatif</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-secondary"><i class="bi bi-emoji-neutral me-1"></i> Neutral</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?php if($isu->sit_aktif == 'YA'): ?>
+                                                    <span class="badge bg-success">Aktif</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-warning text-dark">Arkib</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <a href="<?= site_url('sentimen/kemaskini_isu/'.$isu->sit_bil) ?>" class="btn btn-sm btn-outline-primary" title="Kemaskini"><i class="bi bi-pencil-square"></i></a>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+                    </div></div>
+            </div><div class="col-lg-4">
+
+                <div class="card">
+                    <div class="card-body pb-0">
+                        <h5 class="card-title">Taburan Sentimen <span>| Keseluruhan</span></h5>
+                        
+                        <div class="pt-2 mb-4" style="min-height: 400px;">
+                            <canvas id="donutChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Panduan <span>| Ikon</span></h5>
+                        <div class="activity">
+                            <div class="activity-item d-flex">
+                                <div class="activite-label text-success"><i class="bi bi-check-circle-fill"></i></div>
+                                <div class="activity-content ms-2">Sentimen Positif</div>
+                            </div>
+                            <div class="activity-item d-flex mt-2">
+                                <div class="activite-label text-secondary"><i class="bi bi-dash-circle-fill"></i></div>
+                                <div class="activity-content ms-2">Sentimen Neutral</div>
+                            </div>
+                            <div class="activity-item d-flex mt-2">
+                                <div class="activite-label text-danger"><i class="bi bi-exclamation-circle-fill"></i></div>
+                                <div class="activity-content ms-2">Sentimen Negatif</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div></div>
     </section>
 
-</main>
+</main><script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-const ctx = document.getElementById('mingguanChart').getContext('2d');
-let myChart;
-const pelaporCtx = document.getElementById('pelaporChart').getContext('2d');
-let pelaporMyChart;
+document.addEventListener("DOMContentLoaded", () => {
+    
+    // 1. DEFINISI VARIABLE CHART SUPAYA BOLEH DIUPDATE
+    let chartBarObj = null;
+    let chartDonutObj = null;
 
-function pelaporFetchDataAndUpdateChart() {
-    fetch('<?= site_url('clr/negeriSentimenPelapor') ?>') // Replace with your PHP endpoint
-        .then(response => response.json())
-        .then(chartData => {
-            // Extract labels and data
-            const labels = chartData.map(item => item.pelaporNama);
-            const pelaporData = chartData.map(item => item.bilanganLaporan);
-
-            // If the chart already exists, update its data
-            if (pelaporMyChart) {
-                pelaporMyChart.data.labels = labels;
-                pelaporMyChart.data.datasets[0].data = pelaporData;
-                pelaporMyChart.update();
-            } else {
-                // Create the chart for the first time
-                pelaporMyChart = new Chart(pelaporCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: "Bilangan Laporan",
-                            data: pelaporData,
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
+    // --- INISIALISASI CARTA BAR ---
+    const ctxBar = document.querySelector('#topIsuChart').getContext('2d');
+    chartBarObj = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            // Masukkan data PHP awal di sini
+            labels: <?= $carta_isu_label ?>, 
+            datasets: [{
+                label: 'Positif',
+                data: <?= $carta_isu_positif ?>,
+                backgroundColor: '#2eca6a',
+                borderRadius: 4
+            }, {
+                label: 'Neutral',
+                data: <?= $carta_isu_neutral ?>,
+                backgroundColor: '#aab7cf',
+                borderRadius: 4
+            }, {
+                label: 'Negatif',
+                data: <?= $carta_isu_negatif ?>,
+                backgroundColor: '#ff771d',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { stacked: true },
+                y: { stacked: true, beginAtZero: true }
             }
-        })
-        .catch(error => console.error('Error fetching data:', error));
-}
+        }
+    });
 
-// Function to fetch data and update the chart
-function mingguanFetchDataAndUpdateChart() {
-    fetch('<?= site_url('clr/negeriSentimenMingguan') ?>') // Replace with your PHP endpoint
+    // --- INISIALISASI CARTA DONUT ---
+    const ctxDonut = document.querySelector('#donutChart').getContext('2d');
+    chartDonutObj = new Chart(ctxDonut, {
+        type: 'doughnut',
+        data: {
+            labels: <?= $donut_label ?>,
+            datasets: [{
+                data: <?= $donut_data ?>,
+                backgroundColor: ['#ff771d',  '#4154f1', '#2eca6a'],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+        }
+    });
+
+    // --- FUNGSI AUTO UPDATE (AJAX) ---
+    function updateDashboard() {
+        fetch('<?= site_url("sentimen/data_dashboard_ajax") ?>')
         .then(response => response.json())
-        .then(chartData => {
-            // Extract labels and data
-            const labels = chartData.map(item => item.minggu);
-            const data = chartData.map(item => item.bilanganLaporan);
+        .then(data => {
+            
+            // 1. UPDATE KAD KPI
+            document.getElementById('kpi-aktif').innerText = data.kpi.aktif;
+            document.getElementById('kpi-dominan').innerText = data.kpi.dominan;
+            
+            // Format teks isu kritikal supaya tak terlalu panjang
+            let isuKritikal = data.kpi.isu_kritikal;
+            if(isuKritikal.length > 25) isuKritikal = isuKritikal.substring(0, 25) + '...';
+            document.getElementById('kpi-isu-kritikal').innerText = isuKritikal;
+            
+            document.getElementById('kpi-jumlah-kritikal').innerText = data.kpi.jumlah_kritikal;
 
-            // If the chart already exists, update its data
-            if (myChart) {
-                myChart.data.labels = labels;
-                myChart.data.datasets[0].data = data;
-                myChart.update();
-            } else {
-                // Create the chart for the first time
-                myChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: "Bilangan Laporan",
-                            data: data,
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            }
+            // 2. UPDATE CARTA BAR
+            // Update Label (Nama Isu mungkin berubah)
+            chartBarObj.data.labels = data.chart_bar.labels;
+            // Update Datasets
+            chartBarObj.data.datasets[0].data = data.chart_bar.positif;
+            chartBarObj.data.datasets[1].data = data.chart_bar.neutral;
+            chartBarObj.data.datasets[2].data = data.chart_bar.negatif;
+            chartBarObj.update(); // Refresh chart
+
+            // 3. UPDATE CARTA DONUT
+            chartDonutObj.data.labels = data.chart_donut.labels;
+            chartDonutObj.data.datasets[0].data = data.chart_donut.data;
+            chartDonutObj.update(); // Refresh chart
+
+            // console.log("Dashboard dikemaskini: " + data.timestamp);
         })
-        .catch(error => console.error('Error fetching data:', error));
-}
+        .catch(error => console.error('Ralat mengemaskini dashboard:', error));
+    }
 
-// Fetch data and update the chart every second
-setInterval(() => {
-    mingguanFetchDataAndUpdateChart();
-    pelaporFetchDataAndUpdateChart();
-}, 2001);
+    // --- SET INTERVAL ---
+    // Jalankan fungsi updateDashboard setiap 5000ms (5 saat)
+    setInterval(updateDashboard, 5000);
 
-// Initial data fetch to create the chart
-mingguanFetchDataAndUpdateChart();
-pelaporFetchDataAndUpdateChart();
-
-const organisasiCtx = document.getElementById('organisasiChart').getContext('2d');
-let organisasiMyChart;
-
-function organisasiFetchDataAndUpdateChart() {
-    fetch('<?= site_url('clr/negeriSentimenOrganisasi') ?>') // Replace with your PHP endpoint
-        .then(response => response.json())
-        .then(chartData => {
-            // Extract labels and data
-            const labels = chartData.map(item => item.pelaporPenempatan);
-            const data = chartData.map(item => item.bilanganLaporan);
-
-            // If the chart already exists, update its data
-            if (organisasiMyChart) {
-                organisasiMyChart.data.labels = labels;
-                organisasiMyChart.data.datasets[0].data = data;
-                organisasiMyChart.update();
-            } else {
-                // Create the chart for the first time
-                organisasiMyChart = new Chart(organisasiCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: "Bilangan Laporan",
-                            data: data,
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            }
-        })
-        .catch(error => console.error('Error fetching data:', error));
-}
-
-// Fetch data and update the chart every second
-setInterval(organisasiFetchDataAndUpdateChart, 2002);
-
-// Initial data fetch to create the chart
-organisasiFetchDataAndUpdateChart();
-
-
-const negeriCtx = document.getElementById('negeriChart').getContext('2d');
-let negeriMyChart;
-
-function negeriFetchDataAndUpdateChart() {
-    fetch('<?= site_url('clr/negeriSentimenNegeri') ?>') // Replace with your PHP endpoint
-        .then(response => response.json())
-        .then(chartData => {
-            // Extract labels and data
-            const labels = chartData.map(item => item.sentimen);
-            const data = chartData.map(item => item.bilanganLaporan);
-
-            // If the chart already exists, update its data
-            if (negeriMyChart) {
-                negeriMyChart.data.labels = labels;
-                negeriMyChart.data.datasets[0].data = data;
-                negeriMyChart.update();
-            } else {
-                // Create the chart for the first time
-                negeriMyChart = new Chart(negeriCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: "Bilangan Laporan",
-                            data: data,
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            }
-        })
-        .catch(error => console.error('Error fetching data:', error));
-}
-
-// Fetch data and update the chart every second
-setInterval(negeriFetchDataAndUpdateChart, 2004);
-
-// Initial data fetch to create the chart
-negeriFetchDataAndUpdateChart();
-
-const daerahCtx = document.getElementById('daerahChart').getContext('2d');
-let daerahMyChart;
-
-function daerahFetchDataAndUpdateChart() {
-    fetch('<?= site_url('clr/negeriSentimenDaerah') ?>') // Replace with your PHP endpoint
-        .then(response => response.json())
-        .then(chartData => {
-            // Extract labels and data
-            const labels = chartData.map(item => item.daerahNama);
-            const data = chartData.map(item => item.bilanganLaporan);
-            const labelPositif = chartData.map(item => item.bilanganPositif);
-            const labelNeutral = chartData.map(item => item.bilanganNeutral);
-            const labelNegatif = chartData.map(item => item.bilanganNegatif);
-
-            // If the chart already exists, update its data
-            if (daerahMyChart) {
-                daerahMyChart.data.labels = labels;
-                daerahMyChart.data.datasets[0].data = data;
-                daerahMyChart.data.datasets[1].data = labelPositif;
-                daerahMyChart.data.datasets[2].data = labelNeutral;
-                daerahMyChart.data.datasets[3].data = labelNegatif;
-                daerahMyChart.update();
-            } else {
-                // Create the chart for the first time
-                daerahMyChart = new Chart(daerahCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: "Bilangan Laporan",
-                            data: data,
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Positif',
-                            data: labelPositif,
-                            backgroundColor: 'rgba(178, 222, 39, 0.2)',
-                            borderColor: 'rgba(178, 222, 39, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Neutral',
-                            data: labelNeutral,
-                            backgroundColor: 'rgba(137, 196, 244, 0.2)',
-                            borderColor: 'rgba(137, 196, 244, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Negatif',
-                            data: labelNegatif,
-                            backgroundColor: 'rgba(150, 40, 27, 0.2)',
-                            borderColor: 'rgba(150, 40, 27, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            }
-        })
-        .catch(error => console.error('Error fetching data:', error));
-}
-
-// Fetch data and update the chart every second
-setInterval(daerahFetchDataAndUpdateChart, 1000);
-
-// Initial data fetch to create the chart
-daerahFetchDataAndUpdateChart();
-
-const parlimenCtx = document.getElementById('parlimenChart').getContext('2d');
-let parlimenMyChart;
-
-function parlimenFetchDataAndUpdateChart() {
-    fetch('<?= site_url('clr/negeriSentimenParlimen') ?>') // Replace with your PHP endpoint
-        .then(response => response.json())
-        .then(chartData => {
-            // Extract labels and data
-            const labels = chartData.map(item => item.parlimenNama);
-            const parlimenData = chartData.map(item => item.bilanganLaporan);
-            const labelPositif = chartData.map(item => item.bilanganPositif);
-            const labelNeutral = chartData.map(item => item.bilanganNeutral);
-            const labelNegatif = chartData.map(item => item.bilanganNegatif);
-
-            // If the chart already exists, update its data
-            if (parlimenMyChart) {
-                parlimenMyChart.data.labels = labels;
-                parlimenMyChart.data.datasets[0].data = parlimenData;
-                parlimenMyChart.data.datasets[1].data = labelPositif;
-                parlimenMyChart.data.datasets[2].data = labelNeutral;
-                parlimenMyChart.data.datasets[3].data = labelNegatif;
-                parlimenMyChart.update();
-            } else {
-                // Create the chart for the first time
-                parlimenMyChart = new Chart(parlimenCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: "Bilangan Laporan",
-                            data: parlimenData,
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Positif',
-                            data: labelPositif,
-                            backgroundColor: 'rgba(178, 222, 39, 0.2)',
-                            borderColor: 'rgba(178, 222, 39, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Neutral',
-                            data: labelNeutral,
-                            backgroundColor: 'rgba(137, 196, 244, 0.2)',
-                            borderColor: 'rgba(137, 196, 244, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Negatif',
-                            data: labelNegatif,
-                            backgroundColor: 'rgba(150, 40, 27, 0.2)',
-                            borderColor: 'rgba(150, 40, 27, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            }
-        })
-        .catch(error => console.error('Error fetching data:', error));
-}
-
-// Fetch data and update the chart every second
-setInterval(parlimenFetchDataAndUpdateChart, 2004);
-
-// Initial data fetch to create the chart
-parlimenFetchDataAndUpdateChart();
-
-const dunCtx = document.getElementById('dunChart').getContext('2d');
-let dunMyChart;
-
-function dunFetchDataAndUpdateChart() {
-    fetch('<?= site_url('clr/negeriSentimenDun') ?>') // Replace with your PHP endpoint
-        .then(response => response.json())
-        .then(chartData => {
-            // Extract labels and data
-            const labels = chartData.map(item => item.dunNama);
-            const dunData = chartData.map(item => item.bilanganLaporan);
-            const labelPositif = chartData.map(item => item.bilanganPositif);
-            const labelNeutral = chartData.map(item => item.bilanganNeutral);
-            const labelNegatif = chartData.map(item => item.bilanganNegatif);
-
-            // If the chart already exists, update its data
-            if (dunMyChart) {
-                dunMyChart.data.labels = labels;
-                dunMyChart.data.datasets[0].data = dunData;
-                dunMyChart.data.datasets[1].data = labelPositif;
-                dunMyChart.data.datasets[2].data = labelNegatif;
-                dunMyChart.data.datasets[3].data = labelNeutral;
-                dunMyChart.update();
-            } else {
-                // Create the chart for the first time
-                dunMyChart = new Chart(dunCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: "Bilangan Laporan",
-                            data: dunData,
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Positif',
-                            data: labelPositif,
-                            backgroundColor: 'rgba(178, 222, 39, 0.2)',
-                            borderColor: 'rgba(178, 222, 39, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Negatif',
-                            data: labelNegatif,
-                            backgroundColor: 'rgba(150, 40, 27, 0.2)',
-                            borderColor: 'rgba(150, 40, 27, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Neutral',
-                            data: labelNeutral,
-                            backgroundColor: 'rgba(137, 196, 244, 0.2)',
-                            borderColor: 'rgba(137, 196, 244, 1)',
-                            borderWidth: 1
-                        },]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            }
-        })
-        .catch(error => console.error('Error fetching data:', error));
-}
-
-// Fetch data and update the chart every second
-setInterval(dunFetchDataAndUpdateChart, 2000);
-
-// Initial data fetch to create the chart
-dunFetchDataAndUpdateChart();
-
-const kawasanCtx = document.getElementById('kawasanChart').getContext('2d');
-let kawasanMyChart;
-
-function kawasanFetchDataAndUpdateChart() {
-    fetch('<?= site_url('clr/negeriSentimenKawasan') ?>') // Replace with your PHP endpoint
-        .then(response => response.json())
-        .then(chartData => {
-            // Extract labels and data
-            const labels = chartData.map(item => item.kawasan);
-            const data = chartData.map(item => item.bilanganLaporan);
-            const labelPositif = chartData.map(item => item.bilanganPositif);
-            const labelNeutral = chartData.map(item => item.bilanganNeutral);
-            const labelNegatif = chartData.map(item => item.bilanganNegatif);
-
-            // If the chart already exists, update its data
-            if (kawasanMyChart) {
-                kawasanMyChart.data.labels = labels;
-                kawasanMyChart.data.datasets[0].data = data;
-                kawasanMyChart.data.datasets[1].data = labelPositif;
-                kawasanMyChart.data.datasets[2].data = labelNeutral;
-                kawasanMyChart.data.datasets[3].data = labelNegatif;
-                kawasanMyChart.update();
-            } else {
-                // Create the chart for the first time
-                kawasanMyChart = new Chart(kawasanCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: "Bilangan Laporan",
-                            data: data,
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Positif',
-                            data: labelPositif,
-                            backgroundColor: 'rgba(178, 222, 39, 0.2)',
-                            borderColor: 'rgba(178, 222, 39, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Neutral',
-                            data: labelNeutral,
-                            backgroundColor: 'rgba(137, 196, 244, 0.2)',
-                            borderColor: 'rgba(137, 196, 244, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Negatif',
-                            data: labelNegatif,
-                            backgroundColor: 'rgba(150, 40, 27, 0.2)',
-                            borderColor: 'rgba(150, 40, 27, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            }
-        })
-        .catch(error => console.error('Error fetching data:', error));
-}
-
-// Fetch data and update the chart every second
-setInterval(kawasanFetchDataAndUpdateChart, 2004);
-
-// Initial data fetch to create the chart
-kawasanFetchDataAndUpdateChart();
-
-const pekerjaanCtx = document.getElementById('pekerjaanChart').getContext('2d');
-let pekerjaanMyChart;
-
-function pekerjaanFetchDataAndUpdateChart() {
-    fetch('<?= site_url('clr/negeriSentimenPekerjaan') ?>') // Replace with your PHP endpoint
-        .then(response => response.json())
-        .then(chartData => {
-            // Extract labels and data
-            const labels = chartData.map(item => item.pekerjaan);
-            const data = chartData.map(item => item.bilanganLaporan);
-            const labelPositif = chartData.map(item => item.bilanganPositif);
-            const labelNeutral = chartData.map(item => item.bilanganNeutral);
-            const labelNegatif = chartData.map(item => item.bilanganNegatif);
-
-            // If the chart already exists, update its data
-            if (pekerjaanMyChart) {
-                pekerjaanMyChart.data.labels = labels;
-                pekerjaanMyChart.data.datasets[0].data = data;
-                pekerjaanMyChart.data.datasets[1].data = labelPositif;
-                pekerjaanMyChart.data.datasets[2].data = labelNeutral;
-                pekerjaanMyChart.data.datasets[3].data = labelNegatif;
-                pekerjaanMyChart.update();
-            } else {
-                // Create the chart for the first time
-                pekerjaanMyChart = new Chart(pekerjaanCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: "Bilangan Laporan",
-                            data: data,
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Positif',
-                            data: labelPositif,
-                            backgroundColor: 'rgba(178, 222, 39, 0.2)',
-                            borderColor: 'rgba(178, 222, 39, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Neutral',
-                            data: labelNeutral,
-                            backgroundColor: 'rgba(137, 196, 244, 0.2)',
-                            borderColor: 'rgba(137, 196, 244, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Negatif',
-                            data: labelNegatif,
-                            backgroundColor: 'rgba(150, 40, 27, 0.2)',
-                            borderColor: 'rgba(150, 40, 27, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            }
-        })
-        .catch(error => console.error('Error fetching data:', error));
-}
-
-// Fetch data and update the chart every second
-setInterval(pekerjaanFetchDataAndUpdateChart, 1000);
-
-// Initial data fetch to create the chart
-pekerjaanFetchDataAndUpdateChart();
-
-const umurCtx = document.getElementById('umurChart').getContext('2d');
-let umurMyChart;
-
-function umurFetchDataAndUpdateChart() {
-    fetch('<?= site_url('clr/negeriSentimenUmur') ?>') // Replace with your PHP endpoint
-        .then(response => response.json())
-        .then(chartData => {
-            // Extract labels and data
-            const labels = chartData.map(item => item.umur);
-            const data = chartData.map(item => item.bilanganLaporan);
-            const labelPositif = chartData.map(item => item.bilanganPositif);
-            const labelNeutral = chartData.map(item => item.bilanganNeutral);
-            const labelNegatif = chartData.map(item => item.bilanganNegatif);
-
-            // If the chart already exists, update its data
-            if (umurMyChart) {
-                umurMyChart.data.labels = labels;
-                umurMyChart.data.datasets[0].data = data;
-                umurMyChart.data.datasets[1].data = labelPositif;
-                umurMyChart.data.datasets[2].data = labelNeutral;
-                umurMyChart.data.datasets[3].data = labelNegatif;
-                umurMyChart.update();
-            } else {
-                // Create the chart for the first time
-                umurMyChart = new Chart(umurCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: "Bilangan Laporan",
-                            data: data,
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Positif',
-                            data: labelPositif,
-                            backgroundColor: 'rgba(178, 222, 39, 0.2)',
-                            borderColor: 'rgba(178, 222, 39, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Neutral',
-                            data: labelNeutral,
-                            backgroundColor: 'rgba(137, 196, 244, 0.2)',
-                            borderColor: 'rgba(137, 196, 244, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Negatif',
-                            data: labelNegatif,
-                            backgroundColor: 'rgba(150, 40, 27, 0.2)',
-                            borderColor: 'rgba(150, 40, 27, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            }
-        })
-        .catch(error => console.error('Error fetching data:', error));
-}
-
-// Fetch data and update the chart every second
-setInterval(umurFetchDataAndUpdateChart, 1000);
-
-// Initial data fetch to create the chart
-umurFetchDataAndUpdateChart();
-
-const kaumCtx = document.getElementById('kaumChart').getContext('2d');
-let kaumMyChart;
-
-function kaumFetchDataAndUpdateChart() {
-    fetch('<?= site_url('clr/negeriSentimenKaum') ?>') // Replace with your PHP endpoint
-        .then(response => response.json())
-        .then(chartData => {
-            // Extract labels and data
-            const labels = chartData.map(item => item.kaum);
-            const data = chartData.map(item => item.bilanganLaporan);
-            const labelPositif = chartData.map(item => item.bilanganPositif);
-            const labelNeutral = chartData.map(item => item.bilanganNeutral);
-            const labelNegatif = chartData.map(item => item.bilanganNegatif);
-
-            // If the chart already exists, update its data
-            if (kaumMyChart) {
-                kaumMyChart.data.labels = labels;
-                kaumMyChart.data.datasets[0].data = data;
-                kaumMyChart.data.datasets[1].data = labelPositif;
-                kaumMyChart.data.datasets[2].data = labelNeutral;
-                kaumMyChart.data.datasets[3].data = labelNegatif;
-                kaumMyChart.update();
-            } else {
-                // Create the chart for the first time
-                kaumMyChart = new Chart(kaumCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: "Bilangan Laporan",
-                            data: data,
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Positif',
-                            data: labelPositif,
-                            backgroundColor: 'rgba(178, 222, 39, 0.2)',
-                            borderColor: 'rgba(178, 222, 39, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Neutral',
-                            data: labelNeutral,
-                            backgroundColor: 'rgba(137, 196, 244, 0.2)',
-                            borderColor: 'rgba(137, 196, 244, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Negatif',
-                            data: labelNegatif,
-                            backgroundColor: 'rgba(150, 40, 27, 0.2)',
-                            borderColor: 'rgba(150, 40, 27, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            }
-        })
-        .catch(error => console.error('Error fetching data:', error));
-}
-
-// Fetch data and update the chart every second
-setInterval(kaumFetchDataAndUpdateChart, 2004);
-
-// Initial data fetch to create the chart
-kaumFetchDataAndUpdateChart();
-
-const jantinaCtx = document.getElementById('jantinaChart').getContext('2d');
-let jantinaMyChart;
-
-function jantinaFetchDataAndUpdateChart() {
-    fetch('<?= site_url('clr/negeriSentimenJantina') ?>') // Replace with your PHP endpoint
-        .then(response => response.json())
-        .then(chartData => {
-            // Extract labels and data
-            const labels = chartData.map(item => item.jantina);
-            const data = chartData.map(item => item.bilanganLaporan);
-            const labelPositif = chartData.map(item => item.bilanganPositif);
-            const labelNeutral = chartData.map(item => item.bilanganNeutral);
-            const labelNegatif = chartData.map(item => item.bilanganNegatif);
-
-            // If the chart already exists, update its data
-            if (jantinaMyChart) {
-                jantinaMyChart.data.labels = labels;
-                jantinaMyChart.data.datasets[0].data = data;
-                jantinaMyChart.data.datasets[1].data = labelPositif;
-                jantinaMyChart.data.datasets[2].data = labelNeutral;
-                jantinaMyChart.data.datasets[3].data = labelNegatif;
-                jantinaMyChart.update();
-            } else {
-                // Create the chart for the first time
-                jantinaMyChart = new Chart(jantinaCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: "Bilangan Laporan",
-                            data: data,
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Positif',
-                            data: labelPositif,
-                            backgroundColor: 'rgba(178, 222, 39, 0.2)',
-                            borderColor: 'rgba(178, 222, 39, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Neutral',
-                            data: labelNeutral,
-                            backgroundColor: 'rgba(137, 196, 244, 0.2)',
-                            borderColor: 'rgba(137, 196, 244, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Negatif',
-                            data: labelNegatif,
-                            backgroundColor: 'rgba(150, 40, 27, 0.2)',
-                            borderColor: 'rgba(150, 40, 27, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            }
-        })
-        .catch(error => console.error('Error fetching data:', error));
-}
-
-// Fetch data and update the chart every second
-setInterval(jantinaFetchDataAndUpdateChart, 2004);
-
-// Initial data fetch to create the chart
-jantinaFetchDataAndUpdateChart();
-
+});
 </script>
-
-
-<?php $this->load->view('negeri_na/susunletak/bawah'); ?>

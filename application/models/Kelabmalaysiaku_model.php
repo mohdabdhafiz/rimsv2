@@ -5,27 +5,6 @@ class Kelabmalaysiaku_model extends CI_Model {
 
     private $tableName = "kelabmalaysiaku";
 
-    /**
-     * Mendapatkan rumusan bilangan kelab, sekolah, dan ahli mengikut daerah.
-     * @param int $limit Bilangan daerah teratas untuk dipaparkan.
-     */
-    public function senaraiRumusanDaerah($limit = 10)
-    {
-        $this->db->select('daerah.nama AS kategoriNama');
-        $this->db->select('COUNT(kelabmalaysiaku_bil) AS jumlahKelab');
-        $this->db->join('kelabmalaysiaku', 'kelabmalaysiaku.kelabmalaysiaku_daerah = daerah.bil');
-        $this->db->where('kelabmalaysiaku.kelabmalaysiaku_status_aktif', "AKTIF");
-        $this->db->group_by('daerah.nama');
-        $this->db->order_by('jumlahKelab', 'DESC');
-        $this->db->limit($limit);
-        $query = $this->db->get('daerah');
-        return $query->result();
-    }
-
-    public function bilanganLaporanUtama(){
-      return $this->db->count_all($this->tableName);
-    }
-
     public function bilanganKelabPengguna($penggunaBil){
       $this->db->select('COUNT(*) AS bilanganKelab');
       $this->db->where('kelabmalaysiaku_pengguna_bil', $penggunaBil);
@@ -64,7 +43,7 @@ class Kelabmalaysiaku_model extends CI_Model {
       return $query->row();
     }
 
-    public function senaraiRumusanUmum($limit = NULL){
+    public function senaraiRumusanUmum(){
       $this->db->select('negeri_tb.nt_nama');
       $this->db->select('(
         SELECT COUNT(*)
@@ -84,14 +63,6 @@ class Kelabmalaysiaku_model extends CI_Model {
         WHERE kelabmalaysiaku.kelabmalaysiaku_negeri = negeri_tb.nt_bil
         AND kelabmalaysiaku.kelabmalaysiaku_status_aktif = "AKTIF"
         ) AS jumlahAhli');
-
-      // Tambah logik untuk had
-      if ($limit) {
-          $this->db->order_by('jumlahKelab', 'DESC');
-          $this->db->limit($limit);
-      } else {
-          $this->db->order_by('negeri_tb.nt_nama', 'ASC');
-      }
       $this->db->order_by('negeri_tb.nt_nama', 'ASC');
       $query = $this->db->get('negeri_tb');
       return $query->result();

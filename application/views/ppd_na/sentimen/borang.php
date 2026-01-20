@@ -282,14 +282,66 @@ $this->load->view('ppd_na/susunletak/navbar');
                 <textarea name="inputAlasan" id="inputAlasan" cols="5" rows="10" class="form-control" placeholder="Alasan" style="height:200px;" required></textarea>
                 <label for="inputAlasan" class="form-label">Sila nyatakan alasan anda</label>
             </div>
-            <div class="text-center">
+
+            <hr class="my-4">
+            <!--  SENTIMEN TERHADAP ISU SEMASA  -->
+
+        <h5 class="text-primary">Penilaian Sentimen Terhadap Isu Semasa</h5>
+        <p class="mb-4">Pilih sentimen bagi setiap isu yang disenaraikan di bawah dan berikan ulasan anda.</p>
+            
+            <?php
+            foreach($senaraiIsu as $isu):
+            ?>
+
+<div class="border rounded p-3 mb-3">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <label for="isu-group-<?= $isu->id ?>" class="form-label"><strong><?= $isu->nama ?></strong></label>
+                </div>
+                <div class="col-md-8">
+                    <div class="btn-group w-100" role="group" aria-label="Sentimen untuk <?= $isu->nama ?>" id="isu-group-<?= $isu->id ?>">
+                        
+                        <input type="radio" class="btn-check" name="inputIsu[<?= $isu->id ?>]" id="isu<?= $isu->id ?>-positif" value="Positif" autocomplete="off" required>
+                        <label class="btn btn-outline-success" for="isu<?= $isu->id ?>-positif"><i class="bi bi-hand-thumbs-up me-2"></i>Positif</label>
+                        
+                        <input type="radio" class="btn-check" name="inputIsu[<?= $isu->id ?>]" id="isu<?= $isu->id ?>-neutral" value="Neutral" autocomplete="off" required>
+                        <label class="btn btn-outline-warning" for="isu<?= $isu->id ?>-neutral"><i class="bi bi-circle me-2"></i>Neutral</label>
+
+                        <input type="radio" class="btn-check" name="inputIsu[<?= $isu->id ?>]" id="isu<?= $isu->id ?>-negatif" value="Negatif" autocomplete="off" required>
+                        <label class="btn btn-outline-danger" for="isu<?= $isu->id ?>-negatif"><i class="bi bi-hand-thumbs-down me-2"></i>Negatif</label>
+
+                    </div>
+                </div>
+                <div class="col-12">
+                    <textarea name="inputAlasanIsu[<?= $isu->id ?>]" id="inputAlasanIsu[<?= $isu->id ?>]" class="form-control mt-3" placeholder="Sila berikan ulasan atau alasan lanjut mengenai pilihan sentimen anda terhadap isu ini... (Maksimum 250 patah perkataan)" style="height: 100px"></textarea>
+                </div>
+            </div>
+</div>
+
+            <?php endforeach; ?>
+            
+            <hr class="my-4">
+
+            <div class="row mb-3">
+                <label for="inputIsuAlasan" class="form-label"><strong>Ulasan Sentimen</strong></label>
+                <div class="col-sm-12">
+                    <textarea name="inputIsuAlasan" id="inputIsuAlasan" class="form-control" style="height: 150px" placeholder="Berikan pandangan atau ulasan lanjut mengenai pilihan sentimen anda terhadap isu-isu di atas..."></textarea>
+                </div>
+            </div>
+
+
+</div>
+
+            <div class="text-center mt-4">
                 <input type="hidden" name="inputPenggunaBil" value="<?= $pengguna->bil ?>">
                 <input type="hidden" name="inputPenggunaWaktu" value="<?= date('Y-m-d H:i:s') ?>">
-                <button type="submit" class="btn btn-outline-primary shadow-sm">Hantar</button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-send-fill me-2"></i>Hantar Penilaian</button>
+                <button type="reset" class="btn btn-secondary">Set Semula</button>
             </div>
+
             </form>
         </div>
-    </div>
+
 
     </section>
 

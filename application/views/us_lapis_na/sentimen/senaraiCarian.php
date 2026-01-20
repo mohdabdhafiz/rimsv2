@@ -78,6 +78,12 @@ $this->load->view('us_lapis_na/susunletak/navbar');
                         <br><?= $sentimen ?>
                     </p>
                 </div>
+                <div class="col-12 col-lg-3">
+                    <p>
+                        <strong>Bilangan Laporan:</strong>
+                        <br><?= count($senaraiLks) ?>
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -103,49 +109,89 @@ $this->load->view('us_lapis_na/susunletak/navbar');
                 <table class="table table-bordered datatable">
                     <thead>
                         <tr>
-                            <th>Nombor Siri</th>
-                            <th>Timestamp</th>
-                            <th>e-Mel</th>
-                            <th>Tarikh Laporan</th>
-                            <th>Nama Pelapor</th>
-                            <th>Nombor Telefon</th>
-                            <th>Negeri</th>
-                            <th>Daerah</th>
-                            <th>Parlimen</th>
-                            <th>DUN</th>
-                            <th>Kawasan</th>
-                            <th>Pekerjaan</th>
-                            <th>Julat Umur</th>
-                            <th>Kaum</th>
-                            <th>Jantina</th>
-                            <th>Sentimen</th>
-                            <th>Perkara</th>
-                            <th>Ulasan</th>
-                            <th>Status</th>
-                        </tr>
+                                        <th scope="col">Nombor Siri</th>
+                                        <th scope="col">Timestamp</th>
+                                        <th scope="col">e-Mel</th>
+                                        <th scope="col">Tarikh Laporan</th>
+                                        <th scope="col">Nama Pelapor</th>
+                                        <th scope="col">Nombor Telefon</th>
+                                        <th scope="col">Negeri</th>
+                                        <th scope="col">Daerah</th>
+                                        <th scope="col">Parlimen</th>
+                                        <th scope="col">DUN</th>
+                                        <th scope="col">Kawasan</th>
+                                        <th scope="col">Pekerjaan</th>
+                                        <th scope="col">Julat Umur</th>
+                                        <th scope="col">Kaum</th>
+                                        <th scope="col">Jantina</th>
+                                        <th scope="col">Sentimen</th>
+                                        <th scope="col">Perkara</th>
+                                        <th scope="col">Ulasan</th>
+                                        <th scope="col">Isu Positif</th>
+                                        <th scope="col">Isu Neutral</th>
+                                        <th scope="col">Isu Negatif</th>
+                                        <th scope="col">Ulasan Isu</th>
+                                    </tr>
                     </thead>
                     <tbody>
                         <?php foreach($senaraiLks as $lks): ?>
                         <tr>
-                            <td><?= $lks->lksBil ?></td>
-                            <td><?= $lks->lksTimestamp ?></td>
-                            <td><?= $lks->penggunaEmel ?></td>
-                            <td><?= $lks->lksTarikhLaporan ?></td>
-                            <td><?= $lks->penggunaNama ?></td>
-                            <td><?= $lks->penggunaNoTel ?></td>
-                            <td><?= $lks->negeriNama ?></td>
-                            <td><?= $lks->daerahNama ?></td>
-                            <td><?= $lks->parlimenNama ?></td>
-                            <td><?= $lks->dunNama ?></td>
-                            <td><?= $lks->lksKawasan ?></td>
-                            <td><?= $lks->lksPekerjaan ?></td>
-                            <td><?= $lks->lksUmur ?></td>
-                            <td><?= $lks->lksKaum ?></td>
-                            <td><?= $lks->lksJantina ?></td>
-                            <td><?= $lks->lksSentimen ?></td>
-                            <td><?= $lks->lksPerkara ?></td>
-                            <td><?= $lks->lksUlasan ?></td>
-                            <td><?= $lks->lksTapisan ?></td>
+                            <td><strong><?= $lks->stBil ?></strong></td>
+                                        <td><?= !empty($lks->stPenggunaWaktu) ? date('d M Y, h:i A', strtotime($lks->stPenggunaWaktu)) : '-' ?></td>
+                                        <td><?= $lks->emel ?></td>
+                                        <td><?= !empty($lks->stTarikhLaporan) ? date('d M Y', strtotime($lks->stTarikhLaporan)) : '-' ?></td>
+                                        <td><?= $lks->nama_penuh ?></td>
+                                        <td><?= $lks->no_tel ?></td>
+                                        <?php 
+                                            $namaNegeri = "-";
+                                            $namaDaerah = "-";
+                                            $namaParlimen = "-";
+                                            $namaDun = "-";
+                                            if(!empty($lks->stDaerahBil)){
+                                                $daerah = $dataDaerah->daerah($lks->stDaerahBil);
+                                                if ($daerah) {
+                                                    $namaNegeri = $daerah->nt_nama;
+                                                    $namaDaerah = $daerah->nama;
+                                                }
+                                            }    
+                                            if(!empty($lks->stParlimenBil)){
+                                                $parlimen = $dataParlimen->parlimen_bil($lks->stParlimenBil);
+                                                if ($parlimen) $namaParlimen = $parlimen->pt_nama;
+                                            }
+                                            if(!empty($lks->stDunBil)){
+                                                $dun = $dataDun->dun_bil($lks->stDunBil);
+                                                if ($dun) $namaDun = $dun->dun_nama;
+                                            }
+                                        ?>
+                                        <td><?= $namaNegeri ?></td>
+                                        <td><?= $namaDaerah ?></td>
+                                        <td><?= $namaParlimen ?></td>
+                                        <td><?= $namaDun ?></td>
+                                        <td><?= $lks->stKawasan ?></td>
+                                        <td><?= $lks->stPekerjaan ?></td>
+                                        <td><?= $lks->stUmur ?></td>
+                                        <td><?= $lks->stKaum ?></td>
+                                        <td><?= $lks->stJantina ?></td>
+                                        <td>
+                                            <?php 
+                                                $sentiment = $lks->stSentimen;
+                                                $textClass = 'text-secondary'; // Lalai
+                                                if ($sentiment == 'Positif') {
+                                                    $textClass = 'text-success';
+                                                } elseif ($sentiment == 'Negatif') {
+                                                    $textClass = 'text-danger';
+                                                } elseif ($sentiment == 'Neutral') {
+                                                    $textClass = 'text-primary';
+                                                }
+                                            ?>
+                                            <span class="<?= $textClass ?>"><?= $sentiment ?></span>
+                                        </td>
+                                        <td><?= $lks->stPerkara ?></td>
+                                        <td><?= $lks->stAlasan ?></td>
+                                        <td><?= $lks->stIsuPositif ?></td>
+                                        <td><?= $lks->stIsuNeutral ?></td>
+                                        <td><?= $lks->stIsuNegatif ?></td>
+                                        <td><?= $lks->stIsuAlasan ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>

@@ -1,68 +1,94 @@
-<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+<?php 
+$this->load->view('us_sismap_na/susunletak/atas');
+$this->load->view('us_sismap_na/susunletak/sidebar');
+$this->load->view('us_sismap_na/susunletak/navbar');
+?>
+
+<main id="main" class="main">
 
 <div class="pagetitle">
-  <h1>RIMS@SISMAP</h1>
-  <nav>
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="<?= site_url('utama') ?>">Home</a></li>
-      <li class="breadcrumb-item active">RIMS@SISMAP</li>
-    </ol>
-  </nav>
-</div>
+        <h1>RIMS@SISMAP</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active">LAMAN UTAMA</li>
+            </ol>
+        </nav>
+    </div><!-- End Page Title -->
 
-<section class="section dashboard">
-    <div class="row">
+<div class="">
+    
+    <section class="section">
 
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Senarai Pilihan Raya Aktif</h5>
-                    
-                    <?php if (!empty($senaraiPruAktif)): ?>
-                        <div class="row g-3">
-                            <?php foreach($senaraiPruAktif as $pru): ?>
-                            <div class="col-lg-4 col-md-6 d-flex align-items-stretch">
-                                <div class="p-3 border rounded text-center w-100 d-flex flex-column shadow-sm">
-                                    <h2 class="display-6"><?= htmlspecialchars($pru->pruSingkatan) ?></h2>
-                                    <p><?= htmlspecialchars($pru->pruNama) ?></p>
-                                    <div class="mt-auto">
-                                        <a href="<?= site_url('pilihanraya/bil/'.$pru->pruBil) ?>" class="btn btn-outline-primary w-100">Lihat Maklumat</a>
-                                    </div>
-                                </div>
-                            </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php else: ?>
-                        <p class="text-center text-muted mt-3">Tiada pilihan raya yang aktif pada masa ini.</p>
-                    <?php endif; ?>
-
-                </div>
+    <div class="card">
+        <div class="card-body">
+            <h1 class="card-title">Gerak Kerja</h1>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                <thead>    
+                    <tr>
+                        <th class="text-center">BIL</th>
+                        <th>MODUL</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="text-center">1</td>
+                            <td><a href="<?= site_url('winnable_candidate') ?>">Modul Jangkaan Calon</a></td>
+                        </tr>
+                        <tr>
+                            <td class="text-center">2</td>
+                            <td><a href="<?= site_url('pegawai') ?>">Modul Petugas</a></td>
+                        </tr>
+                        <tr>
+                            <td class="text-center">3</td>
+                            <td><a href="<?= site_url('pencalonan') ?>">Modul Hari Penamaan Calon</a></td>
+                        </tr>
+                        <tr>
+                            <td class="text-center">4</td>
+                            <td><a href="<?= site_url('kempen') ?>">Modul Laporan Aktiviti Kempen</a></td>
+                        </tr>
+                        <tr>
+                            <td class="text-center">5</td>
+                            <td><a href="<?= site_url('grading') ?>">Modul Grading</a></td>
+                        <tr>
+                            <td class="text-center">6</td>
+                            <td><a href="<?= site_url('undi') ?>">Modul Hari Pembuangan Undi</a></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
+    </div>
 
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Gerak Kerja</h5>
-                    <div class="list-group">
-                        <a href="<?= site_url('winnable_candidate') ?>" class="list-group-item list-group-item-action">Modul Jangkaan Calon</a>
-                        <a href="<?= site_url('pencalonan') ?>" class="list-group-item list-group-item-action">Modul Hari Penamaan Calon</a>
-                        <a href="<?= site_url('grading') ?>" class="list-group-item list-group-item-action">Modul Grading</a>
-                        <a href="<?= site_url('undi') ?>" class="list-group-item list-group-item-action">Modul Hari Pembuangan Undi</a>
+    <div class="card">
+        <div class="card-body">
+            <h1 class="card-title">Senarai Pilihan Raya</h1>
+            <div class="row g-3">
+                <?php foreach($senaraiPruAktif as $pru): ?>
+                <div class="col-12 col-lg-3 col-md-6 col-sm-12 d-flex align-items-stretch">
+                    <div class="p-3 border rounded text-center w-100 d-flex flex-column">
+                        <h2 class="display-6"><?= $pru->pruSingkatan ?></h2>
+                        <p><?= $pru->pruNama ?></p>
+                        <div class="mt-auto">
+                        <a href="<?= site_url('pilihanraya/bil/'.$pru->pruBil) ?>" class="btn btn-outline-primary shadow-sm w-100">Lihat</a>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Operasi</h5>
-                    <?php 
-                    // Memuatkan navigasi operasi seperti dalam fail asal
-                    $this->load->view('us_sismap_na/us_sismap_nav'); 
-                    ?>
-                </div>
+                <?php endforeach; ?>
             </div>
         </div>
-
     </div>
-</section>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Operasi</h5>
+            <?php $this->load->view('us_sismap_na/us_sismap_nav'); ?>
+        </div>
+    </div>
+
+    </section>
+
+</main>
+
+
+<?php $this->load->view('us_sismap_na/susunletak/bawah'); ?>
