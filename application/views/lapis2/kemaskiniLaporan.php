@@ -24,9 +24,13 @@
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <label for="lapis_kluster_bil" class="form-label">Kluster Isu</label>
-                                <select name="lapis_kluster_bil" class="form-select" required>
+                                <select name="lapis_kluster_bil" id="lapis_kluster_bil" class="form-select" required>
                                     <?php foreach($senaraiKluster as $kluster): ?>
-                                        <option value="<?= $kluster->kit_bil ?>" <?= ($kluster->kit_bil == $laporan->lapis_kluster_bil) ? 'selected' : '' ?>>
+                                        <!-- KEMAS KINI DI SINI: Menambah data-kluster-nama -->
+                                        <option 
+                                            value="<?= $kluster->kit_bil ?>" 
+                                            data-kluster-nama="<?= htmlspecialchars(strtoupper($kluster->kit_nama), ENT_QUOTES, 'UTF-8') ?>"
+                                            <?= ($kluster->kit_bil == $laporan->lapis_kluster_bil) ? 'selected' : '' ?>>
                                             <?= strtoupper($kluster->kit_nama) ?>
                                         </option>
                                     <?php endforeach; ?>
@@ -100,6 +104,8 @@
                                 </select>
                             </div>
                         </div>
+
+                        <div id="bahagian-spesifik-kluster"></div>
 
                         <!-- Bahagian 3: Butiran Isu -->
                         <h5 class="card-title">Butiran Isu</h5>
@@ -212,6 +218,8 @@
         const dmSelect = document.getElementById('lapis_dm_bil');
         const statusSelect = document.getElementById('lapis_status');
         const ulasanSection = document.getElementById('ulasan-section');
+
+        
 
         function toggleUlasanSection() {
             if (statusSelect.value === 'Laporan Ditolak') {
@@ -340,5 +348,61 @@
                     statusP.className = 'form-text text-danger';
                 });
         });
+
+        const klusterSelect = document.getElementById('lapis_kluster_bil');
+        const bahagianSpesifik = document.getElementById('bahagian-spesifik-kluster');
+        const laporanData = <?= json_encode($laporan ?? null) ?>;
+
+        function muatkanBorangSpesifik() {
+            // KEMAS KINI DI SINI: Menggunakan getAttribute untuk mendapatkan nama kluster
+            const selectedOption = klusterSelect.options[klusterSelect.selectedIndex];
+            const selectedKlusterNama = selectedOption.getAttribute('data-kluster-nama');
+            
+            bahagianSpesifik.innerHTML = ''; // Kosongkan bahagian
+
+            // Bahagian Spesifik untuk EKONOMI
+            if (selectedKlusterNama === 'EKONOMI') {
+                const hargaNaik = laporanData && laporanData.lapis_ekonomi_harga_naik ? laporanData.lapis_ekonomi_harga_naik.split(', ') : [];
+                const bekalanKurang = laporanData && laporanData.lapis_ekonomi_bekalan_kurang ? laporanData.lapis_ekonomi_bekalan_kurang.split(', ') : [];
+                
+                const senaraiHarga = ['Ayam', 'Telur Ayam', 'Minyak Masak Botol', 'Minyak Masak Paket', 'Sayur-sayuran', 'Ikan', 'Daging'];
+                const senaraiBekalan = ['Ayam', 'Telur Ayam', 'Minyak Masak Paket', 'Gula', 'Tepung'];
+
+                let html = `<h5 class="card-title">Butiran Kluster Ekonomi</h5>`;
+                html += `<div class="row g-3">`;
+                html += `<div class="col-md-6"><label class="form-label">Isu Kenaikan Harga:</label>`;
+                senaraiHarga.forEach(item => {
+                    html += `
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="ekonomi_harga_naik[]" value="${item}" ${hargaNaik.includes(item) ? 'checked' : ''}>
+                            <label class="form-check-label">${item}</label>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+
+                html += `<div class="col-md-6"><label class="form-label">Isu Kekurangan Bekalan:</label>`;
+                senaraiBekalan.forEach(item => {
+                    html += `
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="ekonomi_bekalan_kurang[]" value="${item}" ${bekalanKurang.includes(item) ? 'checked' : ''}>
+                            <label class="form-check-label">${item}</label>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+                html += `</div>`;
+
+                bahagianSpesifik.innerHTML = html;
+            }
+            
+            // ... (tambah 'else if' untuk kluster lain di sini)
+
+        }
+
+        klusterSelect.addEventListener('change', muatkanBorangSpesifik);
+        muatkanBorangSpesifik(); // Panggil fungsi semasa halaman dimuatkan
+
+        
     });
 </script>

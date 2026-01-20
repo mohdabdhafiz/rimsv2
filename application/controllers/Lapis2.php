@@ -263,7 +263,7 @@ class Lapis2 extends CI_Controller {
     }
 
     /**
-     * Memaparkan borang untuk mengemas kini laporan.
+     * Memaparkan borang untuk mengemas kini laporan sedia ada.
      */
     public function kemaskiniLaporan($laporan_bil)
     {
@@ -271,94 +271,113 @@ class Lapis2 extends CI_Controller {
         $data["pengguna"] = $this->pengguna();
         $data = array_merge($data, $this->templates($sesi));
 
-        $models = ['lapis2_model', 'kluster_isu_model', 'negeri_model', 'daerah_model', 'parlimen_model', 'dun_model', 'pdm_model'];
-        $this->load->model($models);
-
-        // Dapatkan data laporan yang sedia ada
-        $data['laporan'] = $this->lapis2_model->dapatkan_satu_laporan($laporan_bil);
-
-        if (empty($data['laporan'])) {
-            show_404();
-        }
-
-        // Muatkan data untuk dropdown
-        $data['senaraiKluster'] = $this->kluster_isu_model->senarai();
-        $data['senaraiNegeri'] = $this->negeri_model->senarai();
-        
-        // Muatkan senarai untuk dropdown bersandaran berdasarkan data laporan sedia ada
-        $negeri_bil_laporan = $data['laporan']->lapis_negeri_bil;
-        $parlimen_bil_laporan = $data['laporan']->lapis_parlimen_bil;
-        $data['senaraiDaerah'] = $this->daerah_model->senarai_ikut_negeri($negeri_bil_laporan);
-        $data['senaraiParlimen'] = $this->parlimen_model->senarai_ikut_negeri($negeri_bil_laporan);
-        $data['senaraiDun'] = $this->dun_model->senarai_ikut_negeri($negeri_bil_laporan);
-        $data['senaraiDm'] = $this->pdm_model->parlimen($parlimen_bil_laporan);
-
-
-        $this->renderView($data, ["lapis2/kemaskiniLaporan"]);
-    }
-
-    /**
-     * Memproses data dari borang kemas kini.
-     */
-    public function prosesKemaskini()
-    {
-        $laporan_bil = $this->input->post('lapis_bil');
-
+        // Muatkan semua model yang diperlukan
         $models = [
             'lapis2_model', 'kluster_isu_model', 'negeri_model', 
             'daerah_model', 'parlimen_model', 'dun_model', 'pdm_model'
         ];
         $this->load->model($models);
 
-        // Dapatkan nama berdasarkan ID yang dikemas kini
-        $kluster = $this->kluster_isu_model->satu_data($this->input->post('lapis_kluster_bil'));
-        $negeri = $this->negeri_model->satu_data($this->input->post('lapis_negeri_bil'));
-        $daerah = $this->daerah_model->satu_data($this->input->post('lapis_daerah_bil'));
-        $parlimen = $this->parlimen_model->satu_data($this->input->post('lapis_parlimen_bil'));
-        $dun = $this->dun_model->satu_data($this->input->post('lapis_dun_bil'));
-        $pdm = $this->pdm_model->satu_data_parlimen($this->input->post('lapis_dm_bil'));
-        $status_laporan = $this->input->post('lapis_status');
-        $ulasan_tolak = null;
-        // KEMAS KINI: Proses ulasan jika laporan ditolak
-        if ($status_laporan === 'Laporan Ditolak') {
-            $ulasan_array = $this->input->post('ulasan_tolak');
-            if (is_array($ulasan_array)) {
-                // Gabungkan ulasan yang dipilih menjadi satu string, dipisahkan dengan koma
-                $ulasan_tolak = implode(', ', $ulasan_array);
-            }
+        // Dapatkan data laporan yang ingin dikemas kini
+        $data['laporan'] = $this->lapis2_model->dapatkan_satu_laporan($laporan_bil);
+
+        if (!$data['laporan']) {
+            show_404(); // Tunjuk 404 jika laporan tidak ditemui
         }
+
+        // Muatkan data untuk dropdown
+        $data['senaraiKluster'] = $this->kluster_isu_model->senarai();
+        $data['senaraiNegeri'] = $this->negeri_model->senarai();
+
+        // Muatkan data untuk dropdown bersandaran berdasarkan data laporan
+        $negeri_bil_laporan = $data['laporan']->lapis_negeri_bil;
+        $parlimen_bil_laporan = $data['laporan']->lapis_parlimen_bil;
         
-        // Kumpul data yang telah dikemas kini
-        $data_kemaskini = [
+        $data['senaraiDaerah'] = $this->daerah_model->senarai_ikut_negeri($negeri_bil_laporan);
+        $data['senaraiParlimen'] = $this->parlimen_model->senarai_ikut_negeri($negeri_bil_laporan);
+        $data['senaraiDun'] = $this->dun_model->senarai_ikut_negeri($negeri_bil_laporan);
+        $data['senaraiDm'] = $this->pdm_model->parlimen($parlimen_bil_laporan);
+
+        $this->renderView($data, ["lapis2/kemaskiniLaporan"]);
+    }
+
+    /**
+     * Memproses data dari borang kemas kini dan menyimpannya ke pangkalan data.
+     */
+    public function prosesKemaskini()
+    {
+        $laporan_bil = $this->input->post('lapis_bil');
+
+        // 1. Kumpul semua data umum dari borang
+        $data_umum = [
             'lapis_kluster_bil' => $this->input->post('lapis_kluster_bil'),
-            'lapis_kluster_nama' => $kluster ? $kluster->kit_nama : null,
             'lapis_tarikh_laporan' => $this->input->post('lapis_tarikh_laporan'),
+            'lapis_negeri_bil' => $this->input->post('lapis_negeri_bil'),
+            'lapis_daerah_bil' => $this->input->post('lapis_daerah_bil'),
+            'lapis_parlimen_bil' => $this->input->post('lapis_parlimen_bil'),
+            'lapis_dun_bil' => $this->input->post('lapis_dun_bil'),
+            'lapis_dm_bil' => $this->input->post('lapis_dm_bil'),
+            'lapis_jenis_kawasan' => $this->input->post('lapis_jenis_kawasan'),
             'lapis_tajuk_isu' => $this->input->post('lapis_tajuk_isu'),
             'lapis_ringkasan_isu' => $this->input->post('lapis_ringkasan_isu'),
             'lapis_cadangan_intervensi' => $this->input->post('lapis_cadangan_intervensi'),
-            'lapis_status' => $status_laporan,
-            'lapis_ulasan_tolak' => $ulasan_tolak,
-            'lapis_negeri_bil' => $this->input->post('lapis_negeri_bil'),
-            'lapis_negeri_nama' => $negeri ? $negeri->nt_nama : null,
-            'lapis_daerah_bil' => $this->input->post('lapis_daerah_bil'),
-            'lapis_daerah_nama' => $daerah ? $daerah->nama : null,
-            'lapis_parlimen_bil' => $this->input->post('lapis_parlimen_bil'),
-            'lapis_parlimen_nama' => $parlimen ? $parlimen->pt_nama : null,
-            'lapis_dun_bil' => $this->input->post('lapis_dun_bil'),
-            'lapis_dun_nama' => $dun ? $dun->dun_nama : null,
-            'lapis_dm_bil' => $this->input->post('lapis_dm_bil'),
-            'lapis_dm_nama' => $pdm ? $pdm->ppt_nama : null,
-            // KEMAS KINI DI SINI
             'lapis_lokasi' => $this->input->post('lapis_lokasi'),
             'lapis_latitude' => $this->input->post('lapis_latitude'),
-            'lapis_longitude' => $this->input->post('lapis_longitude')
+            'lapis_longitude' => $this->input->post('lapis_longitude'),
+            'lapis_status' => $this->input->post('lapis_status'),
+            'lapis_ulasan_tolak' => ($this->input->post('lapis_status') === 'Laporan Ditolak') 
+                                  ? implode(', ', (array)$this->input->post('ulasan_tolak')) 
+                                  : NULL
         ];
 
-        // Panggil model untuk kemas kini data
+        // 2. Kumpul data spesifik berdasarkan kluster
+        $kluster_bil = $this->input->post('lapis_kluster_bil');
+        $this->load->model('kluster_isu_model');
+        $kluster = $this->kluster_isu_model->satu_data($kluster_bil);
+        
+        // Tetapkan semua kolum spesifik kepada NULL dahulu untuk 'membersihkan' data lama
+        $data_spesifik = [
+            'lapis_ekonomi_harga_naik' => NULL,
+            'lapis_ekonomi_bekalan_kurang' => NULL
+            // Tambah kolum kluster lain di sini pada masa hadapan
+        ];
+        
+        if ($kluster) {
+            $nama_kluster_upper = strtoupper($kluster->kit_nama);
+            
+            if ($nama_kluster_upper === 'EKONOMI') {
+                 $harga_naik_array = $this->input->post('ekonomi_harga_naik');
+                 $bekalan_kurang_array = $this->input->post('ekonomi_bekalan_kurang');
+                 $data_spesifik['lapis_ekonomi_harga_naik'] = is_array($harga_naik_array) ? implode(', ', $harga_naik_array) : NULL;
+                 $data_spesifik['lapis_ekonomi_bekalan_kurang'] = is_array($bekalan_kurang_array) ? implode(', ', $bekalan_kurang_array) : NULL;
+            }
+            // ... (tambah `elseif` untuk kluster lain di sini) ...
+        }
+
+        // 3. Gabungkan data umum dan spesifik
+        $data_kemaskini = array_merge($data_umum, $data_spesifik);
+        
+        // 4. Dapatkan nama-nama untuk disimpan
+        $this->load->model(['negeri_model', 'daerah_model', 'parlimen_model', 'dun_model', 'pdm_model']);
+        $kluster = $this->kluster_isu_model->satu_data($data_kemaskini['lapis_kluster_bil']);
+        $negeri = $this->negeri_model->satu_data($data_kemaskini['lapis_negeri_bil']);
+        $daerah = $this->daerah_model->satu_data($data_kemaskini['lapis_daerah_bil']);
+        $parlimen = $this->parlimen_model->satu_data($data_kemaskini['lapis_parlimen_bil']);
+        $dun = $this->dun_model->satu_data($data_kemaskini['lapis_dun_bil']);
+        $dm = $this->pdm_model->satu_data_parlimen($data_kemaskini['lapis_dm_bil']);
+
+        $data_kemaskini['lapis_kluster_nama'] = $kluster ? $kluster->kit_nama : null;
+        $data_kemaskini['lapis_negeri_nama'] = $negeri ? $negeri->nt_nama : null;
+        $data_kemaskini['lapis_daerah_nama'] = $daerah ? $daerah->nama : null;
+        $data_kemaskini['lapis_parlimen_nama'] = $parlimen ? $parlimen->pt_nama : null;
+        $data_kemaskini['lapis_dun_nama'] = $dun ? $dun->dun_nama : null;
+        $data_kemaskini['lapis_dm_nama'] = $dm ? $dm->ppt_nama : null;
+
+        // 5. Simpan ke pangkalan data
+        $this->load->model('lapis2_model');
         $this->lapis2_model->kemaskini_laporan($laporan_bil, $data_kemaskini);
 
-        // Set mesej kejayaan dan redirect
-        $this->session->set_flashdata('mesej_sukses', 'Laporan #' . $laporan_bil . ' telah berjaya dikemas kini.');
+        $this->session->set_flashdata('success', 'Laporan #' . $laporan_bil . ' berjaya dikemas kini.');
         redirect('lapis2/lihatLaporan/' . $laporan_bil);
     }
 
