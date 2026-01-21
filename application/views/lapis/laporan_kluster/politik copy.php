@@ -1,6 +1,6 @@
+<?php $this->load->view('lapis/nav'); ?>
 
-
-<div class="p-3 border rounded mb-3 bg-white shadow">
+<div class="p-3 border rounded mb-3">
     <h2>Laporan Penuh Kluster Isu: <?= $kluster_isu->kit_nama ?></h2>
     <p><?= $kluster_isu->kit_deskripsi ?></p>
 

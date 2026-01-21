@@ -2,7 +2,7 @@
 
     //PRIVATE
 
-    private function templates($sesi){
+    private function templates2($sesi){
         $templates = [
             "header" => $sesi."/susunletak/atas",
             "sidebar" => $sesi."/susunletak/sidebar",
@@ -12,7 +12,7 @@
         return $templates;
     }
 
-    private function pengguna(){
+    private function pengguna2(){
         $penggunaBil = $this->session->userdata('pengguna_bil');
         if(empty($penggunaBil)){
             redirect(base_url());
@@ -22,7 +22,7 @@
         return $pengguna;
     }
 
-    private function sesi(){
+    private function sesi2(){
         $sesi = strtoupper($this->session->userdata('peranan'));
         if(empty($sesi)){
             redirect(base_url());
@@ -39,6 +39,55 @@
         }
         return $sesi;
     }
+
+    private function template($sesi){
+        $sesi = strtoupper($sesi);
+        switch($sesi){
+            case 'URUSETIA' :
+                $view = "urussetia_na";
+                break;
+            case "DATA" :
+                $view = "us_sismap_na";
+                break;
+            case 'PPD' :
+                $view = "ppd_na";
+                break;
+            case 'NEGERI' :
+                $view = "negeri_na";
+                break;
+            default :
+                redirect(base_url());
+        }
+        $template = [
+            "header" => "$view/susunletak/atas",
+            "sidebar" => "$view/susunletak/sidebar",
+            "navbar" => "$view/susunletak/navbar",
+            "footer" => "$view/susunletak/bawah"
+        ];
+        return $template;
+    }
+
+    private function pengguna(){
+        $penggunaBil = $this->session->userdata("pengguna_bil");
+        $this->load->model("pengguna_model");
+        $pengguna = $this->pengguna_model->pengguna($penggunaBil);
+        return $pengguna;
+    }
+
+    private function sesi(){
+        $sesi = strtoupper($this->session->userdata("peranan"));
+        if(empty($sesi)){
+            redirect(base_url());
+        }
+        if(strpos($sesi, 'PPD') !== false){
+            $sesi = 'PPD';
+        }
+        if(strpos($sesi, 'NEGERI') !== false){
+            $sesi = 'NEGERI';
+        }
+        return $sesi;
+    }
+
 
     //PUBLIC
 
@@ -2012,6 +2061,147 @@ public function prosesDraf(){
 
     public function penuh($sf){
 
+        $sesi = $this->sesi();
+        $data['pengguna'] = $this->pengguna();
+        $data = array_merge($data, $this->template($sesi));
+
+        $data['kluster_shortform'] = $sf;
+        $this->load->model('kluster_isu_model');
+        $data['kluster_isu'] = $this->kluster_isu_model->ikut_shortform($sf);
+
+        $senarai_laporan = array();
+        if($sf == 'politik'){
+            $this->load->model('isu_politik_model');
+            $this->load->model('pengguna_model');
+            $senarai_pelapor = $this->pengguna_model->senarai_pelapor($this->session->userdata('peranan_bil'));
+            foreach($senarai_pelapor as $pelapor){
+                $laporan = $this->isu_politik_model->senarai_laporan($pelapor->bil, date('Y'));
+                if(!empty($laporan)){
+                    $senarai_laporan = array_merge($senarai_laporan, $laporan);
+                }
+            }
+            $data['senarai_laporan'] = $senarai_laporan;
+        }
+
+        $senarai_laporan_ekonomi = array();
+        if($sf == 'ekonomi'){
+            $this->load->model('isu_ekonomi_model');
+            $this->load->model('pengguna_model');
+            $data['data_isu'] = $this->isu_ekonomi_model;
+            $senarai_pelapor = $this->pengguna_model->senarai_pelapor($this->session->userdata('peranan_bil'));
+            foreach($senarai_pelapor as $pelapor){
+                $laporan = $this->isu_ekonomi_model->senarai_laporan($pelapor->bil, date("Y"));
+                if(!empty($laporan)){
+                    $senarai_laporan_ekonomi = array_merge($senarai_laporan_ekonomi, $laporan);
+                }
+            }
+            $data['senarai_laporan'] = $senarai_laporan_ekonomi;
+        }
+
+        $senarai_laporan_alamsekitar = array();
+        if($sf == 'alamsekitar'){
+            $this->load->model('isu_alamsekitar_model');
+            $this->load->model('pengguna_model');
+            $data['data_isu'] = $this->isu_alamsekitar_model;
+            $senarai_pelapor = $this->pengguna_model->senarai_pelapor($this->session->userdata('peranan_bil'));
+            foreach($senarai_pelapor as $pelapor){
+                $laporan = $this->isu_alamsekitar_model->senarai_laporan($pelapor->bil, date("Y"));
+                if(!empty($laporan)){
+                    $senarai_laporan_alamsekitar = array_merge($senarai_laporan_alamsekitar, $laporan);
+                }
+            }
+            $data['senarai_laporan'] = $senarai_laporan_alamsekitar;
+        }
+
+        $senarai_laporan_kesihatan = array();
+        if($sf == 'kesihatan'){
+            $this->load->model('isu_kesihatan_model');
+            $this->load->model('pengguna_model');
+            $data['data_isu'] = $this->isu_kesihatan_model;
+            $senarai_pelapor = $this->pengguna_model->senarai_pelapor($this->session->userdata('peranan_bil'));
+            foreach($senarai_pelapor as $pelapor){
+                $laporan = $this->isu_kesihatan_model->senarai_laporan($pelapor->bil, date("Y"));
+                if(!empty($laporan)){
+                    $senarai_laporan_kesihatan = array_merge($senarai_laporan_kesihatan, $laporan);
+                }
+            }
+            $data['senarai_laporan'] = $senarai_laporan_kesihatan;
+        }
+
+        $senarai_laporan_keselamatan = array();
+        if($sf == 'keselamatan'){
+            $this->load->model('isu_keselamatan_model');
+            $this->load->model('pengguna_model');
+            $data['data_isu'] = $this->isu_keselamatan_model;
+            $senarai_pelapor = $this->pengguna_model->senarai_pelapor($this->session->userdata('peranan_bil'));
+            foreach($senarai_pelapor as $pelapor){
+                $laporan = $this->isu_keselamatan_model->senarai_laporan($pelapor->bil, date("Y"));
+                if(!empty($laporan)){
+                    $senarai_laporan_keselamatan = array_merge($senarai_laporan_keselamatan, $laporan);
+                }
+            }
+            $data['senarai_laporan'] = $senarai_laporan_keselamatan;
+        }
+
+        $senarai_laporan_sosial = array();
+        if($sf == 'sosial'){
+            $this->load->model('isu_sosial_model');
+            $this->load->model('pengguna_model');
+            $data['data_isu'] = $this->isu_sosial_model;
+            $senarai_pelapor = $this->pengguna_model->senarai_pelapor($this->session->userdata('peranan_bil'));
+            foreach($senarai_pelapor as $pelapor){
+                $laporan = $this->isu_sosial_model->senarai_laporan($pelapor->bil, date("Y"));
+                if(!empty($laporan)){
+                    $senarai_laporan_sosial = array_merge($senarai_laporan_sosial, $laporan);
+                }
+            }
+            $data['senarai_laporan'] = $senarai_laporan_sosial;
+        }
+
+        $senarai_laporan_infrastruktur = array();
+        if($sf == 'infrastruktur'){
+            $this->load->model('isu_infrastruktur_model');
+            $this->load->model('pengguna_model');
+            $data['data_isu'] = $this->isu_infrastruktur_model;
+            $senarai_pelapor = $this->pengguna_model->senarai_pelapor($this->session->userdata('peranan_bil'));
+            foreach($senarai_pelapor as $pelapor){
+                $laporan = $this->isu_infrastruktur_model->senarai_laporan($pelapor->bil, date("Y"));
+                if(!empty($laporan)){
+                    $senarai_laporan_infrastruktur = array_merge($senarai_laporan_infrastruktur, $laporan);
+                }
+            }
+            $data['senarai_laporan'] = $senarai_laporan_infrastruktur;
+        }
+
+        $senarai_laporan_telekomunikasi = array();
+        if($sf == 'telekomunikasi'){
+            $this->load->model('isu_telekomunikasi_model');
+            $this->load->model('pengguna_model');
+            $data['data_isu'] = $this->isu_telekomunikasi_model;
+            $senarai_pelapor = $this->pengguna_model->senarai_pelapor($this->session->userdata('peranan_bil'));
+            foreach($senarai_pelapor as $pelapor){
+                $laporan = $this->isu_telekomunikasi_model->senarai_laporan($pelapor->bil, date("Y"));
+                if(!empty($laporan)){
+                    $senarai_laporan_telekomunikasi = array_merge($senarai_laporan_telekomunikasi, $laporan);
+                }
+            }
+            $data['senarai_laporan'] = $senarai_laporan_telekomunikasi;
+        }
+
+        $data['bilangan_pelapor'] = count($senarai_pelapor);
+        $data['data_pengguna'] = $this->pengguna_model;
+        $this->load->model('parlimen_model');
+        $this->load->model('dun_model');
+        $this->load->model('daerah_model');
+        $data['dataDaerah'] = $this->daerah_model;
+        $data['data_parlimen'] = $this->parlimen_model;
+        $data['data_dun'] = $this->dun_model;
+        $data['gunaView'] = ['lapis/laporan_kluster/'.$sf];
+        $this->load->view("baseTemplate", $data);
+    }
+
+    public function penuh2($sf){
+
         $sesi = strtoupper($this->session->userdata('peranan'));
         if(empty($sesi)){
             redirect(base_url());
@@ -2183,7 +2373,23 @@ public function prosesDraf(){
         
     }
 
-    public function index()
+
+    public function index(){
+        $sesi = $this->sesi();
+        $data['pengguna'] = $this->pengguna();
+        $data = array_merge($data, $this->template($sesi));
+        $this->load->model([
+            "kluster_isu_model",
+            "pengguna_model"
+        ]);
+        $data['data_laporan'] = $this->kluster_isu_model;
+        $data['senarai_kluster'] = $this->kluster_isu_model->senarai_penuh();
+        $data['senarai_pelapor'] = $this->pengguna_model->senarai_pelapor($this->session->userdata('peranan_bil'));
+        $data['gunaView'] = ["lapis/ppd"];
+        $this->load->view("baseTemplate", $data);
+    }
+
+    public function index2()
     {
 
         //INITIALIZATION
@@ -2242,6 +2448,8 @@ public function prosesDraf(){
                 $this->load->view('urusetia_na/lapis/utama', $data);
                 break;
         }
+
+
 
     }
 
@@ -2304,7 +2512,7 @@ public function proses_politik()
     $this->load->model('isu_politik_model');
     $this->simpan_ke_lapis_tb('politik');
     $this->isu_politik_model->tambah(); 
-    redirect('lapis');
+    redirect('lapis/penuh/politik');
     return;
     
 }

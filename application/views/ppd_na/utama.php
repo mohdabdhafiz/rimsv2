@@ -167,11 +167,21 @@ $this->load->view($sidebar);
                     </tr>
                     <tr>
                         <td class="text-center">2</td>
-                        <td>Melihat laporan bagi tahun <?= date('Y') ?></td>
-                        <td class="text-center"><?= $bilanganLaporanLapis ?></td>
+                        <td>Melihat bilangan laporan bagi tahun <?= date('Y') ?></td>
+                        <td class="text-center">Tidak Berkenaan</td>
                         <td class="text-center">
                         <a href="<?= site_url('lapis') ?>" class="btn btn-outline-primary shadow-sm">
                                 <i class="bi bi-inboxes"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">2</td>
+                        <td>Melihat senarai laporan</td>
+                        <td class="text-center"><?= $bilanganLaporanLapis ?></td>
+                        <td class="text-center">
+                        <a href="<?= site_url('lapis/maklumat_penuh') ?>" class="btn btn-outline-primary shadow-sm">
+                                <i class="bi bi-inboxes-fill"></i>
                             </a>
                         </td>
                     </tr>
